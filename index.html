@@ -1,0 +1,2689 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TemanTB</title>
+<meta name="description" content="Pendamping digital pengobatan TBC — patuh minum obat, cegah penularan, sembuh tuntas">
+<meta name="theme-color" content="#2E7D32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TemanTB">
+<style>
+:root {
+  --primary: #2E7D32;
+  --primary-light: #E8F5E9;
+  --primary-mid: #66BB6A;
+  --primary-dark: #1B5E20;
+  --success: #43A047;
+  --success-light: #E8F5E9;
+  --danger: #E53935;
+  --danger-light: #FFEBEE;
+  --warning: #F57C00;
+  --warning-light: #FFF3E0;
+  --info: #039BE5;
+  --info-light: #E1F5FE;
+  --purple: #7B1FA2;
+  --purple-light: #F3E5F5;
+  --gray-100: #F5F9F5;
+  --gray-200: #E8EFE8;
+  --gray-600: #6B7F6E;
+  --gray-800: #2C3E2F;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+button, [onclick], .menu-icon-btn, .cs-header, .nav-item, .quick-item {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+button:active, [onclick]:active { opacity: 0.85; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--gray-100);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  color: var(--gray-800);
+}
+
+/* ── TOAST ── */
+#toastContainer {
+  position: fixed; top: 16px; left: 50%;
+  transform: translateX(-50%);
+  width: 92%; max-width: 420px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 10px;
+  pointer-events: none;
+}
+.toast {
+  background: white; border-radius: 16px; padding: 14px 16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.16);
+  display: flex; align-items: flex-start; gap: 12px;
+  animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  border-left: 5px solid var(--primary);
+  pointer-events: all; position: relative; overflow: hidden;
+}
+.toast.success { border-color: var(--success); }
+.toast.warning { border-color: var(--warning); }
+.toast.danger  { border-color: var(--danger); }
+.toast-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.toast-content { flex: 1; min-width: 0; }
+.toast-title { font-size: 14px; font-weight: 700; color: var(--gray-800); margin-bottom: 2px; }
+.toast-msg { font-size: 12px; color: var(--gray-600); line-height: 1.4; }
+.toast-close { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--gray-600); flex-shrink: 0; padding: 0 0 0 4px; line-height: 1; }
+.toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; animation: toastProgress 4s linear forwards; }
+.toast.info .toast-progress { background: var(--primary); }
+.toast.success .toast-progress { background: var(--success); }
+.toast.warning .toast-progress { background: var(--warning); }
+.toast.danger .toast-progress { background: var(--danger); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-14px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+
+/* ── HEADER ── */
+.app-header {
+  background: linear-gradient(135deg, #1B5E20, #43A047);
+  padding: 16px 18px 20px;
+  color: white; position: relative; overflow: hidden;
+}
+.app-header::before {
+  content: ''; position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: rgba(255,255,255,0.08); border-radius: 50%;
+}
+.app-header::after {
+  content: ''; position: absolute;
+  bottom: -60px; left: -20px;
+  width: 140px; height: 140px;
+  background: rgba(255,255,255,0.06); border-radius: 50%;
+}
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; position: relative; z-index: 1; }
+.app-brand { font-size: 20px; font-weight: 800; letter-spacing: 0.3px; }
+.app-brand span { font-size: 13px; font-weight: 400; opacity: 0.9; display: block; }
+.header-badge { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; backdrop-filter: blur(4px); }
+.header-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; position: relative; z-index: 1; }
+.hstat { background: rgba(255,255,255,0.15); border-radius: 12px; padding: 10px; text-align: center; backdrop-filter: blur(4px); }
+.hstat-val { font-size: 20px; font-weight: 800; }
+.hstat-lbl { font-size: 10px; opacity: 0.9; margin-top: 2px; }
+
+/* ── SMART STATUS ── */
+.smart-status {
+  margin: 14px 16px 0; padding: 12px 14px; border-radius: 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 600;
+}
+.smart-status.normal { background: var(--success-light); color: var(--success); }
+.smart-status.warning { background: var(--warning-light); color: var(--warning); }
+.smart-status.danger { background: var(--danger-light); color: var(--danger); }
+.ss-icon { font-size: 22px; }
+
+/* ── INSIGHT CARD ── */
+.insight-card-premium {
+  background: linear-gradient(135deg, #E8F5E9, #F1F8E9);
+  border-left: 4px solid var(--primary);
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 14px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.insight-card-premium.warn { background: linear-gradient(135deg, #FFF8E1, #FFF3E0); border-color: var(--warning); }
+.insight-card-premium.danger { background: linear-gradient(135deg, #FFEBEE, #FCE4EC); border-color: var(--danger); }
+.icp-icon { font-size: 26px; flex-shrink: 0; }
+.icp-label { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: var(--primary); margin-bottom: 3px; }
+.icp-label.warn { color: var(--warning); }
+.icp-label.danger { color: var(--danger); }
+.icp-text { font-size: 13px; color: var(--gray-800); line-height: 1.5; font-weight: 500; }
+
+/* ── NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white; display: flex; justify-content: space-around;
+  padding: 8px 4px 10px; box-shadow: 0 -4px 16px rgba(0,0,0,0.1);
+  z-index: 100; max-width: 480px; margin: 0 auto;
+}
+.nav-item {
+  background: none; border: none; padding: 6px 4px;
+  border-radius: 12px; text-align: center; flex: 1;
+  transition: background 0.2s;
+}
+.nav-item.active { background: var(--primary-light); }
+.nav-icon { font-size: 18px; }
+.nav-label { font-size: 8px; color: var(--gray-600); margin-top: 2px; font-weight: 500; }
+.nav-item.active .nav-label { color: var(--primary); font-weight: 700; }
+
+/* ── CONTENT ── */
+.main-content { padding: 14px 14px 0; max-width: 480px; margin: 0 auto; }
+.tab-panel { display: none; min-height: 60vh; padding-bottom: 16px; }
+.tab-panel.active { display: block; }
+
+/* ── CARD ── */
+.card {
+  background: white; border-radius: 16px; padding: 16px;
+  margin-bottom: 14px; box-shadow: 0 4px 12px rgba(46,125,50,0.08);
+}
+.card-title { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+.card-subtitle { font-size: 12px; color: var(--gray-600); margin-bottom: 12px; }
+.card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-action { font-size: 11px; font-weight: 700; color: var(--primary); background: none; border: none; }
+
+/* ── PROGRESS ── */
+.progress-wrap { background: var(--gray-200); border-radius: 99px; height: 10px; margin: 8px 0; }
+.progress-fill { height: 10px; border-radius: 99px; background: linear-gradient(90deg, var(--primary), var(--primary-mid)); transition: width 0.6s; }
+.progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-600); }
+
+/* ── QUICK ACTIONS ── */
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.quick-item {
+  background: white; border-radius: 14px; padding: 12px 8px;
+  text-align: center; box-shadow: 0 2px 8px rgba(46,125,50,0.1);
+  border: 2px solid transparent; transition: all 0.2s;
+  font-size: 11px; color: var(--gray-800); font-weight: 600;
+}
+.quick-item:active { transform: scale(0.96); }
+.quick-item .qi-icon { font-size: 22px; margin-bottom: 4px; }
+.quick-item.danger { border-color: #FFCDD2; }
+
+/* ── MENU GRID (3 col, 12 items for "Semua Fitur") ── */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.menu-item {
+  background: white;
+  border-radius: 14px;
+  padding: 14px 8px 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(46,125,50,0.08);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--gray-800);
+  font-size: 11px;
+  font-weight: 600;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.menu-item:active { transform: scale(0.96); }
+.menu-item .mi-icon {
+  font-size: 28px;
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary-light);
+  margin-bottom: 2px;
+}
+.menu-item .mi-label { line-height: 1.2; font-size: 10.5px; }
+
+/* ── BIG OBAT BUTTON ── */
+.obat-main { text-align: center; padding: 14px 0 6px; }
+.obat-btn {
+  width: 130px; height: 130px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+  border: none; color: white; font-size: 14px; font-weight: 700;
+  cursor: pointer; box-shadow: 0 8px 24px rgba(46,125,50,0.4);
+  transition: transform 0.1s;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; margin: 0 auto; position: relative;
+}
+.obat-btn::before {
+  content: ''; position: absolute; inset: -8px;
+  border-radius: 50%; border: 2px solid var(--primary);
+  opacity: 0.3; animation: pulseBtn 2s ease-out infinite;
+}
+@keyframes pulseBtn {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+.obat-btn.taken { background: linear-gradient(135deg, #66BB6A, #81C784); }
+.obat-btn.taken::before { display: none; }
+.obat-btn:active { transform: scale(0.94); }
+.obat-icon { font-size: 48px; line-height: 1; }
+.obat-label { font-size: 11px; font-weight: 600; opacity: 0.95; }
+.obat-sub { text-align: center; margin-top: 12px; font-size: 12px; color: var(--gray-600); }
+.obat-streak { display: inline-flex; align-items: center; gap: 6px; background: #FFF8E1; color: #E65100; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-top: 8px; }
+
+/* ── BUTTONS ── */
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-mid)); color: white; border: none; border-radius: 30px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(46,125,50,0.35); }
+.btn-secondary { background: var(--gray-200); color: var(--gray-800); border: none; border-radius: 30px; padding: 12px 20px; font-size: 14px; font-weight: 600; }
+.btn-danger { background: linear-gradient(135deg, #E53935, #EF5350); color: white; border: none; border-radius: 30px; padding: 12px 28px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 14px rgba(229,57,53,0.35); }
+.btn-full { width: 100%; display: block; }
+.btn-row { display: flex; gap: 8px; }
+.btn-row > * { flex: 1; }
+
+/* ── SYMPTOMS ── */
+.symptom-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.symptom-btn { background: white; border: 2px solid var(--gray-200); border-radius: 20px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
+.symptom-btn.selected { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+.symptom-btn.danger-symptom { border-color: #FFCDD2; }
+.symptom-btn.danger-symptom.selected { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+.s-icon { font-size: 14px; }
+.sh-item { background: var(--gray-100); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; font-size: 12px; }
+.sh-time { color: var(--gray-600); margin-bottom: 4px; }
+.sh-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.sh-tag { background: var(--primary-light); color: var(--primary); border-radius: 10px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+.sh-tag.danger { background: var(--danger-light); color: var(--danger); }
+
+/* ── CALENDAR ── */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+.cal-head { text-align: center; font-size: 10px; font-weight: 700; color: var(--gray-600); padding: 4px 0; }
+.cal-day { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--gray-600); background: var(--gray-100); }
+.cal-day.taken { background: var(--success-light); color: var(--success); }
+.cal-day.missed { background: var(--danger-light); color: var(--danger); }
+.cal-day.today { background: var(--primary); color: white; }
+.cal-day.future { opacity: 0.4; }
+.cal-legend { display: flex; gap: 14px; margin-top: 10px; font-size: 11px; color: var(--gray-600); justify-content: center; }
+.cal-legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* ── MILESTONE ── */
+.milestone-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: var(--gray-100); margin-bottom: 8px; }
+.milestone-item.done { background: var(--success-light); }
+.milestone-icon { width: 40px; height: 40px; border-radius: 10px; background: white; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.milestone-item.done .milestone-icon { background: var(--success); color: white; }
+.milestone-body { flex: 1; }
+.milestone-title { font-size: 13px; font-weight: 700; color: var(--gray-800); }
+.milestone-sub { font-size: 11px; color: var(--gray-600); }
+.milestone-reward { font-size: 11px; color: #E65100; font-weight: 600; margin-top: 2px; }
+
+/* ── LAB ── */
+.lab-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100); gap: 10px; }
+.lab-row:last-of-type { border-bottom: none; }
+.lab-label { font-size: 12px; font-weight: 600; color: var(--gray-800); flex: 1; line-height: 1.4; }
+.lab-label small { display: block; font-weight: 500; color: var(--gray-600); font-size: 10px; margin-top: 2px; }
+.lab-value { font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 20px; }
+.lab-value.positive { background: var(--danger-light); color: var(--danger); }
+.lab-value.negative { background: var(--success-light); color: var(--success); }
+.lab-value.normal { background: var(--primary-light); color: var(--primary); }
+.lab-value.pending { background: var(--warning-light); color: var(--warning); }
+
+/* ── CONTACT ── */
+.contact-item { background: var(--gray-100); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+.contact-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.contact-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-mid)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.contact-info { flex: 1; min-width: 0; }
+.contact-name { font-size: 13px; font-weight: 700; color: var(--gray-800); }
+.contact-meta { font-size: 11px; color: var(--gray-600); margin-top: 1px; }
+.contact-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; white-space: nowrap; }
+.contact-badge.screened { background: var(--success-light); color: var(--success); }
+.contact-badge.pending { background: var(--warning-light); color: var(--warning); }
+.contact-flags { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--gray-200); }
+.contact-flag { font-size: 11px; color: var(--danger); background: var(--danger-light); padding: 5px 8px; border-radius: 6px; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+
+/* ── EDUCATION ── */
+.edu-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: white; border: 1.5px solid var(--gray-200); margin-bottom: 8px; }
+.edu-item.done { background: var(--gray-100); border-color: var(--gray-100); }
+.edu-item.locked { opacity: 0.5; }
+.edu-item.active { border-color: var(--primary); background: var(--primary-light); }
+.edu-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.edu-item.done .edu-icon { background: var(--success); color: white; }
+.edu-item.active .edu-icon { background: var(--primary); color: white; }
+.edu-body { flex: 1; min-width: 0; }
+.edu-week { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+.edu-title { font-size: 13px; font-weight: 700; color: var(--gray-800); margin-top: 1px; }
+.edu-meta { font-size: 11px; color: var(--gray-600); margin-top: 2px; }
+.edu-arrow { color: var(--gray-600); font-size: 18px; }
+
+/* ── CALL ── */
+.call-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-100); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: var(--gray-800); }
+.call-item.urgent { background: var(--danger-light); }
+.call-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.call-item.urgent .call-icon { background: var(--danger); }
+.call-body { flex: 1; }
+.call-title { font-size: 13px; font-weight: 700; color: var(--gray-800); }
+.call-sub { font-size: 11px; color: var(--gray-600); margin-top: 1px; }
+
+/* ── SETTINGS ── */
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gray-100); gap: 10px; }
+.setting-row:last-child { border-bottom: none; }
+.setting-label-wrap { flex: 1; min-width: 0; }
+.setting-label { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+.setting-sub { font-size: 11px; color: var(--gray-600); margin-top: 2px; }
+.setting-input { border: 1.5px solid var(--gray-200); border-radius: 10px; padding: 8px 10px; font-size: 13px; width: 160px; text-align: right; font-family: inherit; flex-shrink: 0; }
+.setting-input:focus { outline: none; border-color: var(--primary); }
+.setting-input[type="date"], .setting-input[type="time"] { text-align: left; }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; justify-content: center; z-index: 200; }
+.modal-overlay.active { display: flex; }
+.modal { background: white; width: 100%; max-width: 480px; max-height: 85vh; border-radius: 24px 24px 0 0; padding: 20px 20px 24px; overflow-y: auto; animation: modalUp 0.3s ease-out; }
+@keyframes modalUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-handle { width: 40px; height: 4px; background: var(--gray-200); border-radius: 4px; margin: 0 auto 16px; }
+.modal-title { font-size: 17px; font-weight: 800; color: var(--gray-800); margin-bottom: 4px; }
+.modal-sub { font-size: 12px; color: var(--gray-600); margin-bottom: 16px; }
+
+/* Form */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--gray-800); margin-bottom: 6px; display: block; }
+.form-input, .form-select, .form-textarea { width: 100%; border: 1.5px solid var(--gray-200); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-family: inherit; background: white; color: var(--gray-800); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-check { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--gray-100); border-radius: 10px; }
+.form-check input { width: 20px; height: 20px; accent-color: var(--primary); }
+.form-check label { font-size: 13px; color: var(--gray-800); }
+
+/* ── WARNING BANNER ── */
+.warning-banner { background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white; border-radius: 14px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.warning-banner-icon { font-size: 24px; flex-shrink: 0; }
+.warning-banner-title { font-size: 13px; font-weight: 800; }
+.warning-banner-text { font-size: 11px; opacity: 0.9; margin-top: 2px; line-height: 1.4; }
+
+/* ── CHART ── */
+.chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; padding: 0 4px; }
+.chart-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chart-bar-val { font-size: 10px; font-weight: 700; color: var(--gray-800); }
+.chart-bar { width: 100%; background: linear-gradient(to top, var(--primary), var(--primary-mid)); border-radius: 4px 4px 0 0; min-height: 8px; }
+.chart-labels { display: flex; gap: 6px; padding: 0 4px; margin-top: 4px; }
+.chart-labels > div { flex: 1; text-align: center; font-size: 9px; color: var(--gray-600); }
+
+/* ── MOOD ── */
+.mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 8px 0 12px; }
+.mood-btn {
+  aspect-ratio: 1;
+  border: 2px solid var(--gray-200);
+  border-radius: 14px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-600);
+  padding: 4px;
+}
+.mood-btn .mood-emoji { font-size: 28px; margin-bottom: 2px; }
+.mood-btn.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); transform: scale(1.05); }
+.mood-history-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--gray-100);
+  font-size: 12px;
+}
+.mood-history-row:last-child { border-bottom: none; }
+.mood-history-date { color: var(--gray-600); }
+.mood-history-emoji { font-size: 22px; }
+
+/* ── NUTRITION ── */
+.nutrition-target { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+.nutrition-box {
+  background: var(--gray-100);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.nutrition-box-val { font-size: 18px; font-weight: 800; color: var(--primary); }
+.nutrition-box-lbl { font-size: 10px; color: var(--gray-600); margin-top: 2px; font-weight: 600; }
+.nutrition-box-unit { font-size: 9px; color: var(--gray-600); }
+
+.food-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  background: var(--gray-100);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+.food-emoji { font-size: 24px; }
+.food-info { flex: 1; }
+.food-name { font-size: 12px; font-weight: 700; color: var(--gray-800); }
+.food-detail { font-size: 10px; color: var(--gray-600); margin-top: 1px; }
+.food-remove { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 4px 8px; }
+
+/* ── BREATHING EXERCISE ── */
+.breath-circle {
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-light), #C8E6C9);
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 700;
+  transition: transform 4s ease-in-out;
+  box-shadow: 0 8px 24px rgba(46,125,50,0.2);
+  position: relative;
+}
+.breath-circle.inhale { transform: scale(1.3); }
+.breath-circle::before {
+  content: ''; position: absolute; inset: -10px;
+  border-radius: 50%; border: 2px solid var(--primary);
+  opacity: 0.3;
+}
+
+.exercise-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  text-decoration: none;
+  color: var(--gray-800);
+}
+.exercise-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.exercise-body { flex: 1; }
+.exercise-title { font-size: 13px; font-weight: 700; color: var(--gray-800); }
+.exercise-sub { font-size: 11px; color: var(--gray-600); margin-top: 1px; }
+.exercise-duration { font-size: 10px; color: var(--primary); font-weight: 700; margin-top: 2px; }
+
+/* ── DOCTOR NOTES ── */
+.note-item {
+  background: white;
+  border-left: 4px solid var(--primary);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.note-doctor { font-size: 12px; font-weight: 700; color: var(--primary); }
+.note-date { font-size: 10px; color: var(--gray-600); }
+.note-title { font-size: 13px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+.note-content { font-size: 12px; color: var(--gray-800); line-height: 1.5; }
+.note-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.note-tag {
+  font-size: 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* ── GALLERY ── */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+.gallery-item {
+  aspect-ratio: 1;
+  background: var(--gray-100);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.gallery-item .gi-label {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 6px 4px 4px;
+  text-align: center;
+}
+.gallery-item.add {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 40px;
+}
+
+/* ── COMMUNITY ── */
+.community-post {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.community-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.community-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+  flex-shrink: 0;
+}
+.community-name { font-size: 12px; font-weight: 700; color: var(--gray-800); }
+.community-time { font-size: 10px; color: var(--gray-600); }
+.community-badge {
+  font-size: 9px;
+  background: var(--success-light);
+  color: var(--success);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  margin-left: auto;
+}
+.community-content { font-size: 13px; color: var(--gray-800); line-height: 1.5; }
+.community-actions { display: flex; gap: 16px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+.community-action { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-600); background: none; border: none; cursor: pointer; }
+
+/* ── CERTIFICATE ── */
+.cert-preview {
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  border: 3px solid #FFD54F;
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cert-preview::before {
+  content: '🎖️';
+  position: absolute;
+  top: 10px; right: 10px;
+  font-size: 40px;
+  opacity: 0.3;
+}
+.cert-title { font-size: 14px; font-weight: 800; color: #E65100; text-transform: uppercase; letter-spacing: 1px; }
+.cert-name { font-size: 22px; font-weight: 800; color: var(--gray-800); margin: 10px 0 4px; }
+.cert-desc { font-size: 11px; color: var(--gray-600); line-height: 1.5; }
+.cert-progress { font-size: 10px; color: var(--gray-600); margin-top: 10px; padding-top: 10px; border-top: 1px dashed #FFD54F; }
+
+/* ── DIAGNOSIS CARD ── */
+.diagnosis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.diagnosis-card { border: 2.5px solid var(--gray-200); border-radius: 16px; padding: 16px 12px; background: white; text-align: center; cursor: pointer; transition: all 0.2s; }
+.diagnosis-card:active { transform: scale(0.97); }
+.diagnosis-card.selected { border-color: var(--primary); background: var(--primary-light); }
+.diagnosis-card.selected-danger { border-color: var(--warning); background: var(--warning-light); }
+.diag-icon { font-size: 30px; margin-bottom: 8px; }
+.diag-title { font-size: 13px; font-weight: 800; color: var(--gray-800); margin-bottom: 4px; }
+.diag-sub { font-size: 10px; color: var(--gray-600); margin-bottom: 6px; line-height: 1.4; }
+.diag-duration { font-size: 10px; font-weight: 700; color: var(--primary); background: white; padding: 3px 8px; border-radius: 10px; display: inline-block; }
+.diagnosis-card.selected-danger .diag-duration { color: var(--warning); }
+.regimen-info { background: var(--primary-light); border-radius: 12px; padding: 12px 14px; margin-top: 8px; font-size: 12px; color: var(--primary); line-height: 1.6; display: none; }
+.regimen-info.show { display: block; }
+.regimen-info.warn { background: var(--warning-light); color: var(--warning); }
+
+/* ── EMERGENCY FLOATING BUTTON ── */
+.emergency-float {
+  position: fixed;
+  bottom: 90px;
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E53935, #EF5350);
+  color: white;
+  border: none;
+  font-size: 26px;
+  box-shadow: 0 4px 16px rgba(229,57,53,0.4);
+  cursor: pointer;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+</style>
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<!-- ════════ HEADER ════════ -->
+<div class="app-header">
+  <div class="header-top">
+    <div class="app-brand">
+      🌿 TemanTB
+      <span>Pendamping pengobatan TBC</span>
+    </div>
+    <div class="header-badge">Hari 47/180</div>
+  </div>
+  <div class="header-stats">
+    <div class="hstat">
+      <div class="hstat-val">47</div>
+      <div class="hstat-lbl">🔥 STREAK</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-val">96%</div>
+      <div class="hstat-lbl">KEPATUHAN</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-val">133</div>
+      <div class="hstat-lbl">SISA HARI</div>
+    </div>
+  </div>
+</div>
+
+<!-- Smart Status -->
+<div class="smart-status normal" id="smartStatus">
+  <span class="ss-icon">✅</span>
+  <span>Kondisi baik, teruskan semangat sembuh tuntas!</span>
+</div>
+
+<!-- ════════ MAIN CONTENT ════════ -->
+<div class="main-content">
+
+  <!-- ══ TAB: BERANDA ══ -->
+  <div class="tab-panel active" id="tab-beranda">
+
+    <!-- Insight -->
+    <div class="insight-card-premium">
+      <div class="icp-icon">💡</div>
+      <div>
+        <div class="icp-label">TIPS HARI INI</div>
+        <div class="icp-text">Rifampisin membuat urine, keringat, dan air mata jadi kemerahan/oranye. Ini NORMAL dan tidak berbahaya, jangan panik ya!</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="card">
+      <div class="card-title">📍 Progres Pengobatan</div>
+      <div class="card-subtitle">Fase Lanjutan (RH) • 2RHZE/4RH</div>
+      <div class="progress-wrap">
+        <div class="progress-fill" style="width: 26%"></div>
+      </div>
+      <div class="progress-label">
+        <span>26% • Hari ke-47</span>
+        <span>Target: 10 Sep 2026</span>
+      </div>
+    </div>
+
+    <!-- Obat Hari Ini -->
+    <div class="card">
+      <div class="card-title">💊 Obat Hari Ini</div>
+      <div class="card-subtitle">RH — Rifampisin 450mg + INH 300mg • 07:00 WIB</div>
+      <div class="obat-main">
+        <button class="obat-btn" id="obatBtn" onclick="openModal('modalObat')">
+          <div class="obat-icon">💊</div>
+          <div class="obat-label">TAP UNTUK<br>KONFIRMASI</div>
+        </button>
+        <div class="obat-sub" id="obatSub">Sudah minum obat pagi ini?</div>
+        <div class="obat-streak">🔥 Streak 47 hari berturut-turut</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-grid">
+      <button class="quick-item danger" onclick="openModal('modalSymptom')">
+        <div class="qi-icon">🤒</div>
+        Cek Gejala
+      </button>
+      <button class="quick-item" onclick="switchTab('mood')">
+        <div class="qi-icon">😊</div>
+        Mood Hari Ini
+      </button>
+      <button class="quick-item" onclick="switchTab('gizi')">
+        <div class="qi-icon">🥗</div>
+        Catat Makan
+      </button>
+      <button class="quick-item" onclick="openModal('modalCall')">
+        <div class="qi-icon">📞</div>
+        Hubungi Nakes
+      </button>
+    </div>
+
+    <!-- Semua Fitur (12 menu) -->
+    <div class="card">
+      <div class="card-title">🌟 Semua Fitur</div>
+      <div class="card-subtitle">Akses cepat ke semua menu</div>
+      <div class="menu-grid">
+        <button class="menu-item" onclick="switchTab('kalender')">
+          <div class="mi-icon">📅</div>
+          <div class="mi-label">Kalender<br>Obat</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('lab')">
+          <div class="mi-icon" style="background: #E1F5FE;">🧪</div>
+          <div class="mi-label">Hasil<br>Lab</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('keluarga')">
+          <div class="mi-icon" style="background: #F3E5F5;">👨‍👩‍👧</div>
+          <div class="mi-label">Keluarga<br>Serumah</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('gizi')">
+          <div class="mi-icon" style="background: #FFF3E0;">🥗</div>
+          <div class="mi-label">Gizi &<br>Nutrisi</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('napas')">
+          <div class="mi-icon" style="background: #E0F2F1;">🫁</div>
+          <div class="mi-label">Latihan<br>Napas</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('mood')">
+          <div class="mi-icon" style="background: #FFF8E1;">😊</div>
+          <div class="mi-label">Mood &<br>Jurnal</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('pengaturan')">
+          <div class="mi-icon" style="background: var(--gray-200);">⚙️</div>
+          <div class="mi-label">Pengaturan<br>Akun</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('dokter')">
+          <div class="mi-icon" style="background: #E8EAF6;">👨‍⚕️</div>
+          <div class="mi-label">Catatan<br>Dokter</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('galeri')">
+          <div class="mi-icon" style="background: #F1F8E9;">📸</div>
+          <div class="mi-label">Galeri<br>Progres</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('komunitas')">
+          <div class="mi-icon" style="background: #FCE4EC;">💬</div>
+          <div class="mi-label">Komunitas<br>Alumni</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('darurat')">
+          <div class="mi-icon" style="background: #FFEBEE;">🚨</div>
+          <div class="mi-label">Info<br>Darurat</div>
+        </button>
+        <button class="menu-item" onclick="switchTab('pengaturan')">
+          <div class="mi-icon" style="background: var(--gray-200);">⚙️</div>
+          <div class="mi-label">Pengaturan</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Milestone Next -->
+    <div class="card" style="background: linear-gradient(135deg, #FFF8E1, #FFECB3); border: 1.5px solid #FFD54F;">
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div style="font-size: 38px;">🏆</div>
+        <div style="flex: 1;">
+          <div style="font-size: 10px; font-weight: 800; color: #E65100; text-transform: uppercase; letter-spacing: 0.5px;">TARGET BERIKUTNYA</div>
+          <div style="font-size: 15px; font-weight: 800; color: var(--gray-800); margin-top: 2px;">Akhir Fase Intensif</div>
+          <div style="font-size: 11px; color: var(--gray-600); margin-top: 2px;">Hari ke-60 • Tes dahak ulang</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jadwal -->
+    <div class="card">
+      <div class="card-header-row">
+        <div>
+          <div class="card-title">📅 Jadwal Mendatang</div>
+          <div class="card-subtitle">Kontrol & pemeriksaan</div>
+        </div>
+        <button class="card-action" onclick="switchTab('kalender')">Lihat Semua ›</button>
+      </div>
+      <div class="milestone-item">
+        <div class="milestone-icon" style="background: var(--primary-light); color: var(--primary);">🏥</div>
+        <div class="milestone-body">
+          <div class="milestone-title">Kontrol Rutin</div>
+          <div class="milestone-sub">10 Mei 2026 • 09:00 WIB</div>
+          <div class="milestone-sub">Puskesmas Cempaka Putih</div>
+        </div>
+      </div>
+      <div class="milestone-item">
+        <div class="milestone-icon" style="background: var(--warning-light); color: var(--warning);">🧪</div>
+        <div class="milestone-body">
+          <div class="milestone-title">Tes Dahak Bulan ke-5</div>
+          <div class="milestone-sub">10 Juni 2026 • Pemeriksaan BTA evaluasi</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warning -->
+    <div class="warning-banner">
+      <span class="warning-banner-icon">⚠️</span>
+      <div>
+        <div class="warning-banner-title">JANGAN pernah stop obat sendiri</div>
+        <div class="warning-banner-text">Obat hanya boleh dihentikan atas persetujuan dokter setelah pemeriksaan akhir di bulan ke-6. Berhenti mendadak bisa menyebabkan TB kebal obat.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: KALENDER ══ -->
+  <div class="tab-panel" id="tab-kalender">
+    
+    <div class="card">
+      <div class="card-title">🗓️ Kalender Pengobatan</div>
+      <div class="card-subtitle">April 2026</div>
+      <div class="cal-grid">
+        <div class="cal-head">M</div><div class="cal-head">S</div><div class="cal-head">S</div><div class="cal-head">R</div><div class="cal-head">K</div><div class="cal-head">J</div><div class="cal-head">S</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="legend-dot" style="background: var(--success-light); border: 1px solid var(--success);"></div>Minum obat</div>
+        <div class="cal-legend-item"><div class="legend-dot" style="background: var(--danger-light); border: 1px solid var(--danger);"></div>Terlewat</div>
+        <div class="cal-legend-item"><div class="legend-dot" style="background: var(--primary);"></div>Hari ini</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Tonggak Pengobatan</div>
+      <div class="card-subtitle">Perjalanan menuju sembuh tuntas</div>
+      <div class="milestone-item done">
+        <div class="milestone-icon">✓</div>
+        <div class="milestone-body">
+          <div class="milestone-title">Minggu 2</div>
+          <div class="milestone-sub">Hari ke-14 • Selesai</div>
+          <div class="milestone-reward">🏅 Badge: Pemula Tangguh</div>
+        </div>
+      </div>
+      <div class="milestone-item">
+        <div class="milestone-icon">⏳</div>
+        <div class="milestone-body">
+          <div class="milestone-title">Akhir Fase Intensif</div>
+          <div class="milestone-sub">Hari ke-60 • 13 hari lagi</div>
+          <div class="milestone-reward">🏅 Badge: Lulus Intensif + Tes Dahak</div>
+        </div>
+      </div>
+      <div class="milestone-item">
+        <div class="milestone-icon">⏳</div>
+        <div class="milestone-body">
+          <div class="milestone-title">Bulan ke-5</div>
+          <div class="milestone-sub">Hari ke-150</div>
+          <div class="milestone-reward">🏅 Badge: Hampir Sembuh</div>
+        </div>
+      </div>
+      <div class="milestone-item">
+        <div class="milestone-icon">🎉</div>
+        <div class="milestone-body">
+          <div class="milestone-title">SEMBUH TUNTAS</div>
+          <div class="milestone-sub">Hari ke-180 • Tuntas pengobatan</div>
+          <div class="milestone-reward">🎖️ Sertifikat Digital Sembuh TB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Riwayat Gejala Terakhir</div>
+      <div class="card-subtitle">7 hari terakhir</div>
+      <div class="sh-item">
+        <div class="sh-time">Hari ini, 07:30</div>
+        <div class="sh-tags"><span class="sh-tag">Sehat, tidak ada keluhan</span></div>
+      </div>
+      <div class="sh-item">
+        <div class="sh-time">Kemarin, 08:15</div>
+        <div class="sh-tags"><span class="sh-tag">Urine kemerahan</span><span class="sh-tag">Normal</span></div>
+      </div>
+      <div class="sh-item">
+        <div class="sh-time">2 hari lalu, 19:00</div>
+        <div class="sh-tags"><span class="sh-tag">Mual ringan</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: KELUARGA ══ -->
+  <div class="tab-panel" id="tab-keluarga">
+    
+    <div class="insight-card-premium">
+      <div class="icp-icon">🛡️</div>
+      <div>
+        <div class="icp-label">KENAPA PENTING?</div>
+        <div class="icp-text">TBC menular lewat udara. Keluarga serumah WAJIB didata & diskrining. Anak &lt;5 tahun harus dapat TPT (Terapi Pencegahan TB) meski tidak bergejala.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header-row">
+        <div>
+          <div class="card-title">👨‍👩‍👧 Anggota Keluarga</div>
+          <div class="card-subtitle"><span id="contactCount">3</span> orang terdata</div>
+        </div>
+        <button class="btn-primary" style="padding: 8px 16px; font-size: 12px;" onclick="openModal('modalContact')">+ Tambah</button>
+      </div>
+      <div id="contactList"></div>
+    </div>
+
+    <button class="btn-secondary btn-full" style="margin-bottom: 14px;">
+      📄 Cetak Daftar untuk Puskesmas
+    </button>
+
+    <div class="card">
+      <div class="card-title">💉 Terapi Pencegahan TB (TPT)</div>
+      <div class="card-subtitle">Info penting untuk kontak serumah</div>
+      <div style="font-size: 12px; color: var(--gray-800); line-height: 1.6;">
+        <div style="margin-bottom: 10px;"><strong>Siapa yang perlu TPT?</strong></div>
+        <div style="padding-left: 16px; margin-bottom: 10px;">
+          • Anak usia &lt;5 tahun yang kontak serumah<br>
+          • Orang dengan HIV<br>
+          • Orang dengan gangguan imun
+        </div>
+        <div style="margin-bottom: 10px;"><strong>Regimen TPT:</strong></div>
+        <div style="padding-left: 16px;">
+          • INH 6 bulan, atau<br>
+          • 3HP (INH + Rifapentine) selama 3 bulan
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: LAB ══ -->
+  <div class="tab-panel" id="tab-lab">
+    <div class="card">
+      <div class="card-title">🧪 Hasil TCM (Xpert MTB/RIF)</div>
+      <div class="card-subtitle">Pemeriksaan molekuler cepat</div>
+      <div class="lab-row">
+        <div class="lab-label">Deteksi MTB<small>Baseline diagnosis • 10 Mar 2026</small></div>
+        <span class="lab-value positive">Terdeteksi</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Resistensi Rifampisin<small>Status TB-RO</small></div>
+        <span class="lab-value negative">Sensitif ✓</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔬 Pemeriksaan BTA Dahak</div>
+      <div class="card-subtitle">Evaluasi berkala</div>
+      <div class="lab-row">
+        <div class="lab-label">Baseline<small>10 Mar 2026</small></div>
+        <span class="lab-value positive">BTA +2</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Bulan ke-2<small>10 Mei 2026 (akhir fase intensif)</small></div>
+        <span class="lab-value negative">Negatif ✓</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Bulan ke-5<small>Jadwal: 10 Jun 2026</small></div>
+        <span class="lab-value pending">Belum</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Bulan ke-6 (akhir)<small>Jadwal: 10 Sep 2026</small></div>
+        <span class="lab-value pending">Belum</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚖️ Berat Badan</div>
+      <div class="card-subtitle">Naik 5 kg sejak mulai pengobatan 📈</div>
+      <div class="chart-bars">
+        <div class="chart-bar-col"><div class="chart-bar-val">58</div><div class="chart-bar" style="height: 30%;"></div></div>
+        <div class="chart-bar-col"><div class="chart-bar-val">59</div><div class="chart-bar" style="height: 40%;"></div></div>
+        <div class="chart-bar-col"><div class="chart-bar-val">61</div><div class="chart-bar" style="height: 60%;"></div></div>
+        <div class="chart-bar-col"><div class="chart-bar-val">62</div><div class="chart-bar" style="height: 75%;"></div></div>
+        <div class="chart-bar-col"><div class="chart-bar-val">63</div><div class="chart-bar" style="height: 85%;"></div></div>
+      </div>
+      <div class="chart-labels">
+        <div>Baseline</div><div>Bln 1</div><div>Bln 2</div><div>Bln 3</div><div>Kini</div>
+      </div>
+      <div style="margin-top: 10px; padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px; color: var(--success);">
+        ✓ Kenaikan BB menandakan respons pengobatan yang baik
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🩸 Fungsi Hati (SGOT/SGPT)</div>
+      <div class="card-subtitle">Monitor efek samping OAT</div>
+      <div class="lab-row">
+        <div class="lab-label">SGOT<small>Nilai normal: &lt;40 U/L</small></div>
+        <span class="lab-value normal">32 U/L</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">SGPT<small>Nilai normal: &lt;41 U/L</small></div>
+        <span class="lab-value normal">28 U/L</span>
+      </div>
+      <div style="margin-top: 10px; padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px; color: var(--success);">
+        ✓ Fungsi hati normal, aman lanjut OAT
+      </div>
+    </div>
+
+    <button class="btn-primary btn-full" onclick="showToast('info', 'Upload Hasil', 'Fitur upload akan terhubung ke puskesmas')">
+      📤 Upload Hasil Lab Baru
+    </button>
+  </div>
+
+  <!-- ══ TAB: GIZI & NUTRISI (BARU) ══ -->
+  <div class="tab-panel" id="tab-gizi">
+    <div class="insight-card-premium">
+      <div class="icp-icon">🥗</div>
+      <div>
+        <div class="icp-label">PENTING!</div>
+        <div class="icp-text">Pasien TB butuh gizi ekstra: tinggi protein (telur, ikan, ayam), tinggi kalori, vitamin A & D. Target naik BB 5-10% dalam 2 bulan pertama.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎯 Target Gizi Harian</div>
+      <div class="card-subtitle">Untuk pasien TB dewasa BB 60kg</div>
+      <div class="nutrition-target">
+        <div class="nutrition-box">
+          <div class="nutrition-box-val">2200</div>
+          <div class="nutrition-box-lbl">KALORI</div>
+          <div class="nutrition-box-unit">kcal/hari</div>
+        </div>
+        <div class="nutrition-box">
+          <div class="nutrition-box-val">90g</div>
+          <div class="nutrition-box-lbl">PROTEIN</div>
+          <div class="nutrition-box-unit">1.5g/kg BB</div>
+        </div>
+        <div class="nutrition-box">
+          <div class="nutrition-box-val">2L</div>
+          <div class="nutrition-box-lbl">CAIRAN</div>
+          <div class="nutrition-box-unit">8 gelas/hari</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header-row">
+        <div>
+          <div class="card-title">🍽️ Makanan Hari Ini</div>
+          <div class="card-subtitle">24 April 2026</div>
+        </div>
+        <button class="btn-primary" style="padding: 8px 16px; font-size: 12px;" onclick="openModal('modalFood')">+ Catat</button>
+      </div>
+      <div id="foodList"></div>
+      <div style="margin-top: 12px; padding: 10px; background: var(--primary-light); border-radius: 10px; font-size: 12px; font-weight: 600; color: var(--primary); display: flex; justify-content: space-between;">
+        <span>Total hari ini:</span>
+        <span><span id="totalKcal">850</span> kcal • <span id="totalProtein">42</span>g protein</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ Makanan yang DIANJURKAN</div>
+      <div class="card-subtitle">Untuk pemulihan optimal</div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+        <div style="padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px;">
+          <div style="font-size: 20px;">🥚</div>
+          <strong>Telur</strong><br><span style="color: var(--gray-600);">2-3 butir/hari</span>
+        </div>
+        <div style="padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px;">
+          <div style="font-size: 20px;">🐟</div>
+          <strong>Ikan</strong><br><span style="color: var(--gray-600);">Kaya omega-3</span>
+        </div>
+        <div style="padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px;">
+          <div style="font-size: 20px;">🍗</div>
+          <strong>Ayam/Daging</strong><br><span style="color: var(--gray-600);">Protein tinggi</span>
+        </div>
+        <div style="padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px;">
+          <div style="font-size: 20px;">🥛</div>
+          <strong>Susu</strong><br><span style="color: var(--gray-600);">Kalsium + protein</span>
+        </div>
+        <div style="padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px;">
+          <div style="font-size: 20px;">🥬</div>
+          <strong>Sayur hijau</strong><br><span style="color: var(--gray-600);">Vitamin & zat besi</span>
+        </div>
+        <div style="padding: 10px; background: var(--success-light); border-radius: 10px; font-size: 11px;">
+          <div style="font-size: 20px;">🍊</div>
+          <strong>Buah-buahan</strong><br><span style="color: var(--gray-600);">Vitamin C</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">❌ Yang HARUS DIHINDARI</div>
+      <div class="card-subtitle">Selama minum OAT</div>
+      <div style="padding: 10px; background: var(--danger-light); border-radius: 10px; margin-bottom: 6px; font-size: 12px;">
+        <strong>🚫 Alkohol</strong> — Merusak hati, memperburuk efek samping Rifampisin & INH
+      </div>
+      <div style="padding: 10px; background: var(--warning-light); border-radius: 10px; margin-bottom: 6px; font-size: 12px;">
+        <strong>⚠️ Makanan Tinggi Tiramin</strong> — Keju tua, anggur merah, ikan asap (interaksi dengan INH)
+      </div>
+      <div style="padding: 10px; background: var(--warning-light); border-radius: 10px; font-size: 12px;">
+        <strong>⚠️ Merokok</strong> — Memperlambat penyembuhan paru. Segera BERHENTI total.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💊 Suplemen yang Boleh</div>
+      <div class="card-subtitle">Konsultasikan dulu ke dokter</div>
+      <div class="lab-row">
+        <div class="lab-label">Vitamin B6 (Piridoksin)<small>Mencegah neuropati akibat INH</small></div>
+        <span class="lab-value normal">10-25mg/hari</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Vitamin D<small>Untuk imunitas</small></div>
+        <span class="lab-value normal">1000 IU/hari</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Zinc<small>Mempercepat penyembuhan</small></div>
+        <span class="lab-value normal">15mg/hari</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: LATIHAN NAPAS (BARU) ══ -->
+  <div class="tab-panel" id="tab-napas">
+    <div class="insight-card-premium">
+      <div class="icp-icon">🫁</div>
+      <div>
+        <div class="icp-label">KENAPA PERLU?</div>
+        <div class="icp-text">TB menyerang paru-paru. Latihan pernapasan membantu memperkuat otot napas, mengeluarkan dahak, dan mempercepat pemulihan paru.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧘 Latihan Pernapasan Dalam</div>
+      <div class="card-subtitle">4-7-8 Technique — ikuti animasi</div>
+      <div class="breath-circle" id="breathCircle">Tarik Napas</div>
+      <div style="text-align: center; margin-top: 10px;">
+        <button class="btn-primary" id="breathBtn" onclick="toggleBreathing()">▶ Mulai Latihan</button>
+      </div>
+      <div style="margin-top: 14px; padding: 12px; background: var(--primary-light); border-radius: 10px; font-size: 12px; color: var(--primary);">
+        <strong>Cara:</strong> Tarik napas lewat hidung 4 detik → Tahan 7 detik → Hembuskan lewat mulut 8 detik. Ulangi 4 kali.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💪 Jenis Latihan</div>
+      <div class="card-subtitle">Pilih sesuai kondisi Anda</div>
+      <div class="exercise-item" onclick="showToast('info', 'Latihan Bibir Mengerucut', 'Video latihan akan diputar')">
+        <div class="exercise-icon">😮‍💨</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Pursed-Lip Breathing</div>
+          <div class="exercise-sub">Bibir mengerucut, untuk sesak napas</div>
+          <div class="exercise-duration">⏱ 5 menit • Pemula</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+      <div class="exercise-item" onclick="showToast('info', 'Napas Diafragma', 'Video latihan akan diputar')">
+        <div class="exercise-icon">🫁</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Diaphragmatic Breathing</div>
+          <div class="exercise-sub">Napas perut, memperkuat diafragma</div>
+          <div class="exercise-duration">⏱ 10 menit • Menengah</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+      <div class="exercise-item" onclick="showToast('info', 'Huffing', 'Video latihan akan diputar')">
+        <div class="exercise-icon">💨</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Huffing (Batuk Terkontrol)</div>
+          <div class="exercise-sub">Mengeluarkan dahak dengan efektif</div>
+          <div class="exercise-duration">⏱ 5 menit • Pemula</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+      <div class="exercise-item" onclick="showToast('info', 'Postural Drainage', 'Video latihan akan diputar')">
+        <div class="exercise-icon">🛌</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Postural Drainage</div>
+          <div class="exercise-sub">Posisi tubuh untuk keluarkan dahak</div>
+          <div class="exercise-duration">⏱ 15 menit • Menengah</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏃 Olahraga Ringan</div>
+      <div class="card-subtitle">Mulai perlahan, dengarkan tubuh Anda</div>
+      <div class="exercise-item">
+        <div class="exercise-icon">🚶</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Jalan Kaki</div>
+          <div class="exercise-sub">15-30 menit/hari, pelan-pelan</div>
+        </div>
+      </div>
+      <div class="exercise-item">
+        <div class="exercise-icon">🧘‍♂️</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Yoga/Peregangan</div>
+          <div class="exercise-sub">Pagi hari, 10-15 menit</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">😷 Etika Batuk</div>
+      <div class="card-subtitle">Cegah penularan ke orang lain</div>
+      <ol style="font-size: 12px; line-height: 1.8; padding-left: 18px; color: var(--gray-800);">
+        <li><strong>Pakai masker</strong> saat di sekitar orang lain</li>
+        <li>Tutup mulut & hidung dengan <strong>tisu</strong> saat batuk</li>
+        <li>Jika tidak ada tisu, batuk ke <strong>lipatan siku</strong> — bukan telapak tangan</li>
+        <li>Buang tisu ke <strong>tempat sampah tertutup</strong></li>
+        <li><strong>Cuci tangan</strong> dengan sabun setelah batuk</li>
+        <li>Buka jendela, ventilasi ruangan</li>
+        <li>Pisahkan peralatan makan selama fase intensif</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ══ TAB: MOOD & JURNAL (BARU) ══ -->
+  <div class="tab-panel" id="tab-mood">
+    <div class="insight-card-premium">
+      <div class="icp-icon">💚</div>
+      <div>
+        <div class="icp-label">KESEHATAN MENTAL</div>
+        <div class="icp-text">Stigma TBC bisa berat secara mental. Catat mood Anda, bagikan perasaan. Anda tidak sendirian!</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">😊 Bagaimana Perasaan Anda Hari Ini?</div>
+      <div class="card-subtitle">24 April 2026</div>
+      <div class="mood-grid">
+        <button class="mood-btn" onclick="selectMood(this, 'sedih')">
+          <div class="mood-emoji">😔</div>
+          Sedih
+        </button>
+        <button class="mood-btn" onclick="selectMood(this, 'cemas')">
+          <div class="mood-emoji">😰</div>
+          Cemas
+        </button>
+        <button class="mood-btn" onclick="selectMood(this, 'biasa')">
+          <div class="mood-emoji">😐</div>
+          Biasa
+        </button>
+        <button class="mood-btn" onclick="selectMood(this, 'baik')">
+          <div class="mood-emoji">🙂</div>
+          Baik
+        </button>
+        <button class="mood-btn selected" onclick="selectMood(this, 'senang')">
+          <div class="mood-emoji">😊</div>
+          Senang
+        </button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catatan (opsional)</label>
+        <textarea class="form-textarea" placeholder="Ceritakan apa yang Anda rasakan hari ini..." id="moodNote"></textarea>
+      </div>
+      <button class="btn-primary btn-full" onclick="saveMood()">💾 Simpan Catatan</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Riwayat Mood 7 Hari</div>
+      <div class="card-subtitle">Tren perasaan Anda</div>
+      <div class="mood-history-row">
+        <div>
+          <div style="font-weight: 700; color: var(--gray-800); font-size: 13px;">Hari ini</div>
+          <div class="mood-history-date">24 April 2026</div>
+        </div>
+        <div class="mood-history-emoji">😊</div>
+      </div>
+      <div class="mood-history-row">
+        <div>
+          <div style="font-weight: 700; color: var(--gray-800); font-size: 13px;">Kemarin</div>
+          <div class="mood-history-date">"Mulai terasa lebih baik"</div>
+        </div>
+        <div class="mood-history-emoji">🙂</div>
+      </div>
+      <div class="mood-history-row">
+        <div>
+          <div style="font-weight: 700; color: var(--gray-800); font-size: 13px;">2 hari lalu</div>
+          <div class="mood-history-date">"Capek, tapi semangat"</div>
+        </div>
+        <div class="mood-history-emoji">😐</div>
+      </div>
+      <div class="mood-history-row">
+        <div>
+          <div style="font-weight: 700; color: var(--gray-800); font-size: 13px;">3 hari lalu</div>
+          <div class="mood-history-date">"Cemas hasil tes dahak"</div>
+        </div>
+        <div class="mood-history-emoji">😰</div>
+      </div>
+    </div>
+
+    <div class="card" style="background: linear-gradient(135deg, #F3E5F5, #E1BEE7);">
+      <div class="card-title">🧠 Butuh Bantuan Profesional?</div>
+      <div class="card-subtitle">Konseling gratis untuk pasien TB</div>
+      <div style="font-size: 12px; color: var(--gray-800); line-height: 1.6; margin-bottom: 12px;">
+        Jika Anda merasa sangat sedih, putus asa, atau ingin menyakiti diri sendiri — Anda tidak sendirian. Ada layanan yang bisa membantu:
+      </div>
+      <button class="btn-primary btn-full" style="margin-bottom: 6px;">📞 Halo Kemenkes (1500-567)</button>
+      <button class="btn-secondary btn-full">💬 Layanan Sejiwa (119 ext 8)</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💭 Afirmasi Positif</div>
+      <div class="card-subtitle">Ingatkan diri setiap hari</div>
+      <div style="padding: 14px; background: var(--primary-light); border-radius: 12px; text-align: center; font-size: 14px; font-weight: 600; color: var(--primary); line-height: 1.5;">
+        "Saya kuat. Saya patuh minum obat. Saya akan sembuh tuntas. 💚"
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: EDUKASI ══ -->
+  <div class="tab-panel" id="tab-edukasi">
+    <div class="card" style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 56px; margin-bottom: 12px;">📚</div>
+      <div class="card-title" style="font-size: 17px;">Edukasi TBC</div>
+      <div class="card-subtitle" style="margin-top: 8px; font-size: 13px; line-height: 1.6;">Konten edukasi sedang dalam pengembangan.<br>Segera hadir materi lengkap tentang TBC, cara minum obat, efek samping, dan tips sembuh tuntas.</div>
+      <div style="margin-top: 20px; padding: 12px; background: var(--primary-light); border-radius: 12px; font-size: 12px; color: var(--primary); font-weight: 600;">
+        🌿 Coming Soon
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: CATATAN DOKTER (BARU) ══ -->
+  <div class="tab-panel" id="tab-dokter">
+    <div class="insight-card-premium">
+      <div class="icp-icon">👨‍⚕️</div>
+      <div>
+        <div class="icp-label">RIWAYAT KONSULTASI</div>
+        <div class="icp-text">Semua catatan dari dokter dan nakes tersimpan di sini. Anda bisa lihat kapan saja untuk pengingat.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header-row">
+        <div>
+          <div class="card-title">📝 Catatan Kunjungan</div>
+          <div class="card-subtitle">Total 4 kunjungan</div>
+        </div>
+      </div>
+
+      <div class="note-item">
+        <div class="note-header">
+          <div class="note-doctor">👨‍⚕️ dr. Andi Pratama, SpP</div>
+          <div class="note-date">15 Apr 2026</div>
+        </div>
+        <div class="note-title">Kontrol Rutin Bulan ke-1</div>
+        <div class="note-content">
+          Kondisi pasien membaik. BB naik 3 kg. Batuk berkurang, tidak ada demam. Fungsi hati dalam batas normal. Lanjutkan OAT fase intensif sampai bulan ke-2. Jangan lupa tes dahak pada 10 Mei.
+        </div>
+        <div class="note-tags">
+          <span class="note-tag">Lanjut OAT</span>
+          <span class="note-tag">BB naik</span>
+          <span class="note-tag">Tes dahak 10 Mei</span>
+        </div>
+      </div>
+
+      <div class="note-item">
+        <div class="note-header">
+          <div class="note-doctor">👩‍⚕️ Sdr. Rina (Perawat TB)</div>
+          <div class="note-date">1 Apr 2026</div>
+        </div>
+        <div class="note-title">Kunjungan Rumah</div>
+        <div class="note-content">
+          Pasien patuh minum obat. Ventilasi rumah baik. Keluarga sudah mulai skrining. Edukasi etika batuk kembali. Siti Aminah (istri) sudah tes dahak, hasil negatif.
+        </div>
+        <div class="note-tags">
+          <span class="note-tag">Patuh</span>
+          <span class="note-tag">Kontak tracing</span>
+        </div>
+      </div>
+
+      <div class="note-item">
+        <div class="note-header">
+          <div class="note-doctor">👨‍⚕️ dr. Andi Pratama, SpP</div>
+          <div class="note-date">10 Mar 2026</div>
+        </div>
+        <div class="note-title">Diagnosis & Mulai OAT</div>
+        <div class="note-content">
+          TBC paru aktif, BTA (+2), TCM MTB Detected Rif Sensitive. Regimen: 2RHZE/4RH. Dosis sesuai BB 60kg. Edukasi efek samping sudah diberikan. Pasien kooperatif.
+        </div>
+        <div class="note-tags">
+          <span class="note-tag">Diagnosis</span>
+          <span class="note-tag">Mulai OAT</span>
+          <span class="note-tag">Rif Sensitive</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💊 Resep Obat Aktif</div>
+      <div class="card-subtitle">Berlaku sampai 10 Sep 2026</div>
+      <div class="lab-row">
+        <div class="lab-label">Rifampisin<small>Kapsul 450mg, 1x sehari pagi</small></div>
+        <span class="lab-value normal">450 mg</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Isoniazid (INH)<small>Tablet 300mg, 1x sehari pagi</small></div>
+        <span class="lab-value normal">300 mg</span>
+      </div>
+      <div class="lab-row">
+        <div class="lab-label">Vitamin B6<small>Tablet 10mg, 1x sehari</small></div>
+        <span class="lab-value normal">10 mg</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Rencana Pengobatan</div>
+      <div class="card-subtitle">Timeline yang direncanakan dokter</div>
+      <div style="padding-left: 8px; border-left: 2px dashed var(--primary); margin-left: 8px;">
+        <div style="margin-bottom: 12px; padding-left: 12px; position: relative;">
+          <div style="position: absolute; left: -17px; top: 2px; width: 12px; height: 12px; background: var(--success); border-radius: 50%;"></div>
+          <div style="font-size: 12px; font-weight: 700;">Mar 2026 — Diagnosis ✓</div>
+          <div style="font-size: 11px; color: var(--gray-600);">TCM + BTA + Foto toraks</div>
+        </div>
+        <div style="margin-bottom: 12px; padding-left: 12px; position: relative;">
+          <div style="position: absolute; left: -17px; top: 2px; width: 12px; height: 12px; background: var(--success); border-radius: 50%;"></div>
+          <div style="font-size: 12px; font-weight: 700;">Apr 2026 — Fase Intensif ✓</div>
+          <div style="font-size: 11px; color: var(--gray-600);">2RHZE, 2 bulan</div>
+        </div>
+        <div style="margin-bottom: 12px; padding-left: 12px; position: relative;">
+          <div style="position: absolute; left: -17px; top: 2px; width: 12px; height: 12px; background: var(--primary); border-radius: 50%;"></div>
+          <div style="font-size: 12px; font-weight: 700;">Mei 2026 — Tes Dahak Akhir Intensif</div>
+          <div style="font-size: 11px; color: var(--gray-600);">Evaluasi konversi</div>
+        </div>
+        <div style="margin-bottom: 12px; padding-left: 12px; position: relative;">
+          <div style="position: absolute; left: -17px; top: 2px; width: 12px; height: 12px; background: var(--gray-200); border-radius: 50%;"></div>
+          <div style="font-size: 12px; font-weight: 700;">Mei-Sep 2026 — Fase Lanjutan</div>
+          <div style="font-size: 11px; color: var(--gray-600);">4RH, 4 bulan</div>
+        </div>
+        <div style="padding-left: 12px; position: relative;">
+          <div style="position: absolute; left: -17px; top: 2px; width: 12px; height: 12px; background: var(--gray-200); border-radius: 50%;"></div>
+          <div style="font-size: 12px; font-weight: 700;">Sep 2026 — Dinyatakan Sembuh 🎉</div>
+          <div style="font-size: 11px; color: var(--gray-600);">Tes akhir + sertifikat sembuh</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: GALERI PROGRES (BARU) ══ -->
+  <div class="tab-panel" id="tab-galeri">
+    <div class="insight-card-premium">
+      <div class="icp-icon">📸</div>
+      <div>
+        <div class="icp-label">DOKUMENTASI PROGRES</div>
+        <div class="icp-text">Foto progres bisa jadi motivasi & bukti ke dokter. Simpan foto mingguan, hasil lab, atau kemasan obat.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header-row">
+        <div>
+          <div class="card-title">📷 Foto Progres</div>
+          <div class="card-subtitle">8 foto • Bandingkan perubahan</div>
+        </div>
+        <button class="btn-primary" style="padding: 8px 16px; font-size: 12px;" onclick="showToast('info', 'Upload Foto', 'Buka kamera untuk foto baru')">+ Foto</button>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item" style="background: linear-gradient(135deg, #E8F5E9, #C8E6C9);">
+          📸
+          <div class="gi-label">Baseline<br>58 kg</div>
+        </div>
+        <div class="gallery-item" style="background: linear-gradient(135deg, #E1F5FE, #B3E5FC);">
+          📸
+          <div class="gi-label">Bln 1<br>59 kg</div>
+        </div>
+        <div class="gallery-item" style="background: linear-gradient(135deg, #FFF3E0, #FFE0B2);">
+          📸
+          <div class="gi-label">Bln 2<br>61 kg</div>
+        </div>
+        <div class="gallery-item" style="background: linear-gradient(135deg, #FCE4EC, #F8BBD0);">
+          📸
+          <div class="gi-label">Bln 3<br>62 kg</div>
+        </div>
+        <div class="gallery-item" style="background: linear-gradient(135deg, #F3E5F5, #E1BEE7);">
+          📸
+          <div class="gi-label">Minggu lalu<br>63 kg</div>
+        </div>
+        <div class="gallery-item add" onclick="showToast('info', 'Tambah Foto', 'Foto baru akan tersimpan')">
+          +
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📄 Dokumen Penting</div>
+      <div class="card-subtitle">Simpan hasil lab, resep, surat</div>
+      <div class="exercise-item" onclick="showToast('info', 'Dokumen', 'Tap untuk buka')">
+        <div class="exercise-icon">🧪</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Hasil TCM Baseline</div>
+          <div class="exercise-sub">10 Mar 2026 • PDF</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+      <div class="exercise-item" onclick="showToast('info', 'Dokumen', 'Tap untuk buka')">
+        <div class="exercise-icon">📋</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Hasil BTA Bulan ke-2</div>
+          <div class="exercise-sub">10 Mei 2026 • Foto</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+      <div class="exercise-item" onclick="showToast('info', 'Dokumen', 'Tap untuk buka')">
+        <div class="exercise-icon">💊</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Resep Dokter</div>
+          <div class="exercise-sub">15 Apr 2026 • PDF</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+      <div class="exercise-item" onclick="showToast('info', 'Dokumen', 'Tap untuk buka')">
+        <div class="exercise-icon">🩻</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Foto Rontgen Toraks</div>
+          <div class="exercise-sub">10 Mar 2026 • Foto</div>
+        </div>
+        <div style="font-size: 20px; color: var(--gray-600);">›</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏅 Badge Achievements</div>
+      <div class="card-subtitle">1 dari 4 badge terbuka</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px;">
+        <div style="text-align: center; padding: 8px; background: var(--success-light); border-radius: 12px;">
+          <div style="font-size: 36px;">🏅</div>
+          <div style="font-size: 10px; font-weight: 700; color: var(--success);">Pemula<br>Tangguh</div>
+        </div>
+        <div style="text-align: center; padding: 8px; background: var(--gray-100); border-radius: 12px; opacity: 0.5;">
+          <div style="font-size: 36px;">🔒</div>
+          <div style="font-size: 10px; font-weight: 700; color: var(--gray-600);">Lulus<br>Intensif</div>
+        </div>
+        <div style="text-align: center; padding: 8px; background: var(--gray-100); border-radius: 12px; opacity: 0.5;">
+          <div style="font-size: 36px;">🔒</div>
+          <div style="font-size: 10px; font-weight: 700; color: var(--gray-600);">Hampir<br>Sembuh</div>
+        </div>
+        <div style="text-align: center; padding: 8px; background: var(--gray-100); border-radius: 12px; opacity: 0.5;">
+          <div style="font-size: 36px;">🔒</div>
+          <div style="font-size: 10px; font-weight: 700; color: var(--gray-600);">Sembuh<br>Tuntas</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="cert-preview">
+        <div class="cert-title">Sertifikat Sembuh TB</div>
+        <div class="cert-name">Budi Santoso</div>
+        <div class="cert-desc">Sertifikat akan diberikan setelah menyelesaikan pengobatan 6 bulan penuh dan dinyatakan sembuh oleh dokter.</div>
+        <div class="cert-progress">Progres: 47/180 hari (26%) • 133 hari lagi!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: KOMUNITAS (BARU) ══ -->
+  <div class="tab-panel" id="tab-komunitas">
+    <div class="insight-card-premium">
+      <div class="icp-icon">💬</div>
+      <div>
+        <div class="icp-label">KAMU TIDAK SENDIRI</div>
+        <div class="icp-text">Baca cerita pasien yang sudah sembuh. Berbagi & saling menguatkan. Forum ini aman dan anonim jika Anda mau.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header-row">
+        <div>
+          <div class="card-title">🌟 Cerita Alumni TB</div>
+          <div class="card-subtitle">Pasien yang sudah sembuh tuntas</div>
+        </div>
+      </div>
+
+      <div class="community-post">
+        <div class="community-header">
+          <div class="community-avatar">R</div>
+          <div>
+            <div class="community-name">Rina, 34 thn</div>
+            <div class="community-time">Sembuh 2025 • Jakarta</div>
+          </div>
+          <div class="community-badge">✓ SEMBUH</div>
+        </div>
+        <div class="community-content">
+          "Dulu saya pikir TBC itu aib. Sampai saya lemas, batuk darah, baru ke puskesmas. 6 bulan minum obat itu berat, tapi SEMBUH. Sekarang saya bisa kerja, olahraga, hidup normal. Jangan malu, jangan stop obat! Kamu BISA. 💚"
+        </div>
+        <div class="community-actions">
+          <button class="community-action">❤️ 47</button>
+          <button class="community-action">💬 12 komentar</button>
+        </div>
+      </div>
+
+      <div class="community-post">
+        <div class="community-header">
+          <div class="community-avatar" style="background: linear-gradient(135deg, #7B1FA2, #AB47BC);">D</div>
+          <div>
+            <div class="community-name">Dedi, 52 thn</div>
+            <div class="community-time">Sembuh 2024 • Surabaya</div>
+          </div>
+          <div class="community-badge">✓ SEMBUH</div>
+        </div>
+        <div class="community-content">
+          "Saya sempat putus obat di bulan ke-3 karena merasa sudah sehat. Lalu kambuh & jadi TB-RO. Pengobatan 18 bulan, jauh lebih berat! Pesan saya: JANGAN STOP OBAT SENDIRI. Sampai dokter bilang sembuh."
+        </div>
+        <div class="community-actions">
+          <button class="community-action">❤️ 128</button>
+          <button class="community-action">💬 34 komentar</button>
+        </div>
+      </div>
+
+      <div class="community-post">
+        <div class="community-header">
+          <div class="community-avatar" style="background: linear-gradient(135deg, #E65100, #FF9800);">A</div>
+          <div>
+            <div class="community-name">Anonim</div>
+            <div class="community-time">Sembuh 2025 • Bandung</div>
+          </div>
+          <div class="community-badge">✓ SEMBUH</div>
+        </div>
+        <div class="community-content">
+          "Tips dari saya: Simpan obat di dekat sikat gigi, jadi tiap pagi ingat minum obat. Minta keluarga jadi PMO yang tegas tapi sayang. Dan jangan lupa MAKAN BANYAK! Saya naik 8 kg dalam 6 bulan. 🥗"
+        </div>
+        <div class="community-actions">
+          <button class="community-action">❤️ 89</button>
+          <button class="community-action">💬 18 komentar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✍️ Bagikan Cerita Anda</div>
+      <div class="card-subtitle">Berbagi semangat dengan pasien TB lain</div>
+      <div class="form-group">
+        <textarea class="form-textarea" placeholder="Ceritakan pengalaman Anda hari ini... Bisa anonim jika Anda mau."></textarea>
+      </div>
+      <div class="form-group">
+        <div class="form-check">
+          <input type="checkbox" id="anonPost">
+          <label for="anonPost">Posting secara anonim</label>
+        </div>
+      </div>
+      <button class="btn-primary btn-full" onclick="showToast('success', 'Cerita Dikirim', 'Terima kasih sudah berbagi!')">📤 Kirim</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏷️ Topik Populer</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+        <span class="sh-tag">#efeksamping</span>
+        <span class="sh-tag">#tipsmakan</span>
+        <span class="sh-tag">#motivasi</span>
+        <span class="sh-tag">#stigma</span>
+        <span class="sh-tag">#keluargadukung</span>
+        <span class="sh-tag">#sembuhtuntas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: DARURAT (BARU) ══ -->
+  <div class="tab-panel" id="tab-darurat">
+    <div class="insight-card-premium danger">
+      <div class="icp-icon">🚨</div>
+      <div>
+        <div class="icp-label danger">KAPAN HARUS KE IGD?</div>
+        <div class="icp-text">Jika Anda mengalami kondisi darurat di bawah, JANGAN tunggu besok. Segera ke IGD atau telepon 119.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔴 Gejala Darurat</div>
+      <div class="card-subtitle">Langsung ke IGD jika mengalami:</div>
+      <div style="padding: 10px; background: var(--danger-light); border-radius: 10px; margin-bottom: 6px; font-size: 12px;">
+        <strong>🩸 Batuk darah banyak</strong> — Lebih dari 1 sendok makan
+      </div>
+      <div style="padding: 10px; background: var(--danger-light); border-radius: 10px; margin-bottom: 6px; font-size: 12px;">
+        <strong>😮‍💨 Sesak napas hebat</strong> — Sulit bicara, bibir biru
+      </div>
+      <div style="padding: 10px; background: var(--danger-light); border-radius: 10px; margin-bottom: 6px; font-size: 12px;">
+        <strong>💔 Nyeri dada hebat</strong> — Seperti tertekan, menjalar
+      </div>
+      <div style="padding: 10px; background: var(--danger-light); border-radius: 10px; margin-bottom: 6px; font-size: 12px;">
+        <strong>🌡️ Demam tinggi + kejang</strong> — &gt;39°C, kesadaran menurun
+      </div>
+      <div style="padding: 10px; background: var(--danger-light); border-radius: 10px; margin-bottom: 6px; font-size: 12px;">
+        <strong>🟡 Kulit/mata kuning berat</strong> — Tanda gagal hati
+      </div>
+      <div style="padding: 10px; background: var(--danger-light); border-radius: 10px; font-size: 12px;">
+        <strong>🔴 Ruam seluruh tubuh</strong> — Kemungkinan Stevens-Johnson
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📞 Nomor Darurat</div>
+      <div class="card-subtitle">Tap untuk langsung telepon</div>
+      <a href="tel:119" class="call-item urgent">
+        <div class="call-icon">🚨</div>
+        <div class="call-body">
+          <div class="call-title">119 — Layanan Darurat</div>
+          <div class="call-sub">Ambulans 24 jam, gratis</div>
+        </div>
+        <div style="font-size: 20px;">📞</div>
+      </a>
+      <a href="tel:02142156780" class="call-item">
+        <div class="call-icon">🏥</div>
+        <div class="call-body">
+          <div class="call-title">Puskesmas Cempaka Putih</div>
+          <div class="call-sub">Sen-Sab 08:00-16:00</div>
+        </div>
+        <div style="font-size: 20px;">📞</div>
+      </a>
+      <a href="tel:082198765432" class="call-item">
+        <div class="call-icon">❤️</div>
+        <div class="call-body">
+          <div class="call-title">PMO: Siti Aminah</div>
+          <div class="call-sub">Pengawas Minum Obat</div>
+        </div>
+        <div style="font-size: 20px;">📞</div>
+      </a>
+      <a href="tel:1500567" class="call-item">
+        <div class="call-icon">ℹ️</div>
+        <div class="call-body">
+          <div class="call-title">Halo Kemenkes (1500-567)</div>
+          <div class="call-sub">Konsultasi kesehatan 24 jam</div>
+        </div>
+        <div style="font-size: 20px;">📞</div>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗺️ Faskes Terdekat</div>
+      <div class="card-subtitle">Berdasarkan lokasi Anda</div>
+      <div class="exercise-item">
+        <div class="exercise-icon">🏥</div>
+        <div class="exercise-body">
+          <div class="exercise-title">RSUD Cempaka Putih</div>
+          <div class="exercise-sub">📍 1.2 km • IGD 24 jam</div>
+          <div class="exercise-duration">🚗 8 menit berkendara</div>
+        </div>
+      </div>
+      <div class="exercise-item">
+        <div class="exercise-icon">🏥</div>
+        <div class="exercise-body">
+          <div class="exercise-title">RS Persahabatan</div>
+          <div class="exercise-sub">📍 4.5 km • Rujukan TB</div>
+          <div class="exercise-duration">🚗 15 menit berkendara</div>
+        </div>
+      </div>
+      <div class="exercise-item">
+        <div class="exercise-icon">💊</div>
+        <div class="exercise-body">
+          <div class="exercise-title">Apotek 24 Jam K-24</div>
+          <div class="exercise-sub">📍 0.8 km • Buka 24 jam</div>
+        </div>
+      </div>
+      <button class="btn-primary btn-full" style="margin-top: 8px;" onclick="showToast('info', 'Peta', 'Membuka Google Maps')">
+        🗺️ Lihat di Peta
+      </button>
+    </div>
+
+    <div class="card" style="background: linear-gradient(135deg, #FFEBEE, #FFCDD2);">
+      <div class="card-title">🆔 Info Medis Darurat</div>
+      <div class="card-subtitle">Untuk petugas medis jika Anda tidak sadar</div>
+      <div style="padding: 12px; background: white; border-radius: 12px; margin-top: 8px;">
+        <div style="font-size: 13px; font-weight: 700; color: var(--gray-800);">Budi Santoso, 45 thn</div>
+        <div style="font-size: 11px; color: var(--gray-600); margin-top: 8px; line-height: 1.6;">
+          <strong>Diagnosis:</strong> TBC paru (Rif sensitif)<br>
+          <strong>Obat aktif:</strong> Rifampisin 450mg, INH 300mg<br>
+          <strong>Alergi:</strong> Tidak ada<br>
+          <strong>Golongan darah:</strong> O+<br>
+          <strong>Kontak darurat:</strong> Siti Aminah (Istri) 0821-9876-5432
+        </div>
+      </div>
+      <button class="btn-secondary btn-full" style="margin-top: 10px;" onclick="showToast('info', 'Kartu Darurat', 'Membuat kartu yang bisa dicetak')">
+        🖨️ Cetak Kartu Darurat
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ TAB: PENGATURAN ══ -->
+  <div class="tab-panel" id="tab-pengaturan">
+
+    <!-- Info Banner -->
+    <div class="insight-card-premium">
+      <div class="icp-icon">⚙️</div>
+      <div>
+        <div class="icp-label">DATA PASIEN</div>
+        <div class="icp-text">Isi data berikut dengan benar. Data ini akan menentukan perhitungan durasi pengobatan, pengingat, dan regimen yang tepat.</div>
+      </div>
+    </div>
+
+    <!-- DATA DIRI PASIEN -->
+    <div class="card">
+      <div class="card-title">👤 Data Diri Pasien</div>
+      <div class="card-subtitle">Identitas pasien TB</div>
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap <span style="color: var(--danger);">*</span></label>
+        <input class="form-input" id="settingName" value="Budi Santoso" placeholder="Nama lengkap sesuai KTP">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label class="form-label">Usia (tahun) <span style="color: var(--danger);">*</span></label>
+          <input class="form-input" type="number" id="settingAge" value="45" placeholder="cth: 45">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jenis Kelamin</label>
+          <select class="form-select" id="settingGender">
+            <option value="L" selected>Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label class="form-label">Berat Badan (kg)</label>
+          <input class="form-input" type="number" id="settingWeight" value="63" placeholder="cth: 60">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tinggi Badan (cm)</label>
+          <input class="form-input" type="number" id="settingHeight" value="168" placeholder="cth: 165">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nomor HP</label>
+        <input class="form-input" id="settingPhone" value="0812-3456-7890" placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategori Pasien</label>
+        <select class="form-select" id="settingCategory">
+          <option value="dewasa" selected>Dewasa (≥15 tahun)</option>
+          <option value="anak">Anak (&lt;15 tahun)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- DIAGNOSIS -->
+    <div class="card">
+      <div class="card-title">🩺 Diagnosis TBC</div>
+      <div class="card-subtitle">Pilih jenis TB sesuai hasil pemeriksaan dokter</div>
+
+      <div class="form-group">
+        <label class="form-label">Jenis TB Berdasarkan Sensitivitas Obat <span style="color: var(--danger);">*</span></label>
+        <div class="diagnosis-grid">
+          <button class="diagnosis-card selected" data-diagnosis="sensitif" onclick="selectDiagnosis('sensitif')">
+            <div class="diag-icon">✅</div>
+            <div class="diag-title">TB Sensitif Obat</div>
+            <div class="diag-sub">Rifampisin Sensitive (TB SO)</div>
+            <div class="diag-duration">Durasi: 6 bulan</div>
+          </button>
+          <button class="diagnosis-card" data-diagnosis="resisten" onclick="selectDiagnosis('resisten')">
+            <div class="diag-icon">⚠️</div>
+            <div class="diag-title">TB Resisten Obat</div>
+            <div class="diag-sub">TB-RO / MDR-TB</div>
+            <div class="diag-duration">Durasi: 9-18 bulan</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lokasi Penyakit</label>
+        <select class="form-select" id="settingLocation">
+          <option value="paru" selected>TB Paru</option>
+          <option value="extraparu">TB Ekstraparu (kelenjar, tulang, dll)</option>
+          <option value="both">TB Paru + Ekstraparu</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Klasifikasi Pasien</label>
+        <select class="form-select" id="settingClassification">
+          <option value="baru" selected>Kasus Baru</option>
+          <option value="kambuh">Kambuh (Relaps)</option>
+          <option value="gagal">Gagal Pengobatan</option>
+          <option value="pindah">Pindahan (Transfer in)</option>
+          <option value="lost">Setelah Lost to Follow-up</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Hasil TCM / Xpert MTB/RIF</label>
+        <select class="form-select" id="settingTCM">
+          <option value="detected_sensitive" selected>MTB Detected, Rif Sensitive</option>
+          <option value="detected_resistant">MTB Detected, Rif Resistant</option>
+          <option value="detected_indeterminate">MTB Detected, Rif Indeterminate</option>
+          <option value="not_detected">MTB Not Detected</option>
+          <option value="no_test">Belum tes TCM</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Hasil BTA Dahak (Baseline)</label>
+        <select class="form-select" id="settingBTA">
+          <option value="neg">Negatif</option>
+          <option value="scanty">Scanty (1-9 BTA/100 lapang)</option>
+          <option value="plus1">BTA +1</option>
+          <option value="plus2" selected>BTA +2</option>
+          <option value="plus3">BTA +3</option>
+          <option value="not_done">Belum dilakukan</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- JADWAL PENGOBATAN -->
+    <div class="card">
+      <div class="card-title">📅 Jadwal Pengobatan</div>
+      <div class="card-subtitle">Kapan mulai minum OAT</div>
+
+      <div class="form-group">
+        <label class="form-label">Tanggal Mulai Obat <span style="color: var(--danger);">*</span></label>
+        <input class="form-input" type="date" id="settingStartDate" value="2026-03-10" onchange="updateEndDate()">
+        <div style="font-size: 11px; color: var(--gray-600); margin-top: 4px;">Hari ke-1 dihitung dari tanggal ini</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Estimasi Tanggal Selesai</label>
+        <input class="form-input" type="date" id="settingEndDate" value="2026-09-10" readonly style="background: var(--gray-100);">
+        <div style="font-size: 11px; color: var(--gray-600); margin-top: 4px;">Otomatis berdasarkan durasi regimen</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Regimen OAT</label>
+        <select class="form-select" id="settingRegimen" onchange="updateEndDate()">
+          <optgroup label="TB Sensitif Obat">
+            <option value="2rhze_4rh" selected>2RHZE / 4RH (Kategori 1 — Dewasa, 6 bulan)</option>
+            <option value="2rhz_4rh_anak">2RHZ / 4RH (Anak, 6 bulan)</option>
+            <option value="2rhze_1rhze_5rhe">2RHZE / 1RHZE / 5RHE (Kategori 2 — Relaps, 8 bulan)</option>
+          </optgroup>
+          <optgroup label="TB Resisten Obat">
+            <option value="mdr_short">Regimen Jangka Pendek MDR-TB (9-11 bulan)</option>
+            <option value="mdr_long">Regimen Jangka Panjang MDR-TB (18-24 bulan)</option>
+            <option value="xdr">Regimen TB Pre-XDR/XDR</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div id="regimenInfoBox" class="regimen-info"></div>
+
+      <div class="form-group">
+        <label class="form-label">Fase Pengobatan Saat Ini</label>
+        <select class="form-select" id="settingPhase">
+          <option value="intensif">Fase Intensif</option>
+          <option value="lanjutan" selected>Fase Lanjutan</option>
+          <option value="selesai">Selesai Pengobatan</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- FASKES & PMO -->
+    <div class="card">
+      <div class="card-title">🏥 Faskes & PMO</div>
+      <div class="card-subtitle">Kontak kesehatan</div>
+      <div class="form-group">
+        <label class="form-label">Nama Puskesmas / Faskes</label>
+        <input class="form-input" id="settingFaskes" value="Puskesmas Cempaka Putih">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nama Dokter / Petugas TB</label>
+        <input class="form-input" id="settingDokter" value="dr. Andi Pratama, SpP">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nama PMO (Pengawas Minum Obat)</label>
+        <input class="form-input" id="settingPMO" value="Siti Aminah">
+        <div style="font-size: 11px; color: var(--gray-600); margin-top: 4px;">Keluarga/kerabat yang mengawasi minum obat</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. HP PMO</label>
+        <input class="form-input" id="settingPMOPhone" value="0821-9876-5432">
+      </div>
+    </div>
+
+    <!-- PENGINGAT -->
+    <div class="card">
+      <div class="card-title">🔔 Pengingat Minum Obat</div>
+      <div class="card-subtitle">Atur waktu notifikasi</div>
+      <div class="setting-row">
+        <div class="setting-label-wrap">
+          <div class="setting-label">Jam Minum Obat</div>
+          <div class="setting-sub">Notifikasi setiap hari</div>
+        </div>
+        <input class="setting-input" type="time" value="07:00">
+      </div>
+      <div class="setting-row">
+        <div class="setting-label-wrap">
+          <div class="setting-label">Pengingat ke PMO</div>
+          <div class="setting-sub">WhatsApp ke PMO jika lupa</div>
+        </div>
+        <input type="checkbox" checked style="width: 24px; height: 24px; accent-color: var(--primary);">
+      </div>
+      <div class="setting-row">
+        <div class="setting-label-wrap">
+          <div class="setting-label">Pengingat Mood Harian</div>
+          <div class="setting-sub">Catat perasaan tiap hari</div>
+        </div>
+        <input type="checkbox" checked style="width: 24px; height: 24px; accent-color: var(--primary);">
+      </div>
+    </div>
+
+    <!-- TOMBOL SIMPAN -->
+    <button class="btn-primary btn-full" style="margin-bottom: 10px;" onclick="savePatientData()">
+      💾 Simpan Semua Pengaturan
+    </button>
+
+    <!-- DATA & PRIVASI -->
+    <div class="card">
+      <div class="card-title">💾 Data & Privasi</div>
+      <button class="btn-secondary btn-full" style="margin-bottom: 8px;" onclick="showToast('success', 'Data Diekspor', 'File JSON berhasil diunduh')">
+        📥 Export Data (JSON)
+      </button>
+      <button class="btn-secondary btn-full" style="margin-bottom: 8px;" onclick="showToast('info', 'Laporan PDF', 'Fitur akan segera hadir')">
+        📄 Buat Laporan PDF untuk Dokter
+      </button>
+      <button class="btn-secondary btn-full" onclick="if(confirm('Yakin ingin hapus semua data? Tindakan ini tidak bisa dibatalkan.')) showToast('warning', 'Hapus Data', 'Semua data dihapus permanen')">
+        🗑️ Hapus Semua Data
+      </button>
+    </div>
+
+    <div class="card" style="text-align: center; padding: 20px 16px;">
+      <div style="font-size: 32px; margin-bottom: 8px;">🌿</div>
+      <div style="font-size: 13px; font-weight: 700; color: var(--gray-800);">TemanTB v1.0</div>
+      <div style="font-size: 11px; color: var(--gray-600); margin-top: 4px;">Inisiatif Pengendalian TB Indonesia</div>
+      <div style="font-size: 10px; color: var(--gray-600); margin-top: 8px;">Tanyakan selalu ke dokter/puskesmas Anda.<br>Aplikasi ini tidak menggantikan konsultasi medis.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Emergency floating button -->
+<button class="emergency-float" onclick="switchTab('darurat')" title="Darurat">
+  🚨
+</button>
+
+<!-- ════════ BOTTOM NAV ════════ -->
+<div class="bottom-nav">
+  <button class="nav-item active" data-tab="beranda" onclick="switchTab('beranda')">
+    <div class="nav-icon">🏠</div>
+    <div class="nav-label">Beranda</div>
+  </button>
+  <button class="nav-item" data-tab="kalender" onclick="switchTab('kalender')">
+    <div class="nav-icon">📅</div>
+    <div class="nav-label">Kalender</div>
+  </button>
+  <button class="nav-item" data-tab="lab" onclick="switchTab('lab')">
+    <div class="nav-icon">🧪</div>
+    <div class="nav-label">Lab</div>
+  </button>
+  <button class="nav-item" data-tab="gizi" onclick="switchTab('gizi')">
+    <div class="nav-icon">🥗</div>
+    <div class="nav-label">Gizi</div>
+  </button>
+  <button class="nav-item" data-tab="mood" onclick="switchTab('mood')">
+    <div class="nav-icon">😊</div>
+    <div class="nav-label">Mood</div>
+  </button>
+  <button class="nav-item" data-tab="pengaturan" onclick="switchTab('pengaturan')">
+    <div class="nav-icon">⚙️</div>
+    <div class="nav-label">Pengaturan</div>
+  </button>
+</div>
+
+<!-- ════════ MODALS ════════ -->
+
+<!-- Modal Obat -->
+<div class="modal-overlay" id="modalObat">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="text-align: center; margin-bottom: 14px;"><div style="font-size: 56px;">💊</div></div>
+    <div class="modal-title" style="text-align: center;">Konfirmasi Minum Obat</div>
+    <div class="modal-sub" style="text-align: center;">Rifampisin 450mg + INH 300mg</div>
+    <div class="insight-card-premium" style="margin-top: 14px;">
+      <div class="icp-icon">📸</div>
+      <div>
+        <div class="icp-label">VIDEO DOT (OPSIONAL)</div>
+        <div class="icp-text">Anda bisa rekam video singkat saat menelan obat untuk verifikasi ke nakes. Ini fitur bantuan, tidak wajib.</div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top: 14px;">
+      <button class="btn-secondary" onclick="closeModal('modalObat')">Belum</button>
+      <button class="btn-primary" onclick="confirmObat()">Ya, Sudah Minum</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Symptom -->
+<div class="modal-overlay" id="modalSymptom">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="symptomChecklist">
+      <div class="modal-title">🤒 Cek Gejala Hari Ini</div>
+      <div class="modal-sub">Pilih semua yang Anda rasakan. Gejala berbendera 🚩 perlu perhatian.</div>
+      <div class="symptom-grid" id="symptomGrid"></div>
+      <div class="btn-row" style="margin-top: 6px;">
+        <button class="btn-secondary" onclick="closeModal('modalSymptom'); resetSymptoms();">Batal</button>
+        <button class="btn-primary" onclick="submitSymptoms()">Kirim Laporan</button>
+      </div>
+    </div>
+    <div id="symptomAlert" style="display: none;">
+      <div style="text-align: center; margin-bottom: 14px;"><div style="font-size: 56px;">⚠️</div></div>
+      <div class="modal-title" style="text-align: center; color: var(--danger);">Perlu Perhatian Segera!</div>
+      <div class="modal-sub" style="text-align: center;">Gejala yang Anda laporkan mungkin efek samping serius OAT</div>
+      <div id="alertDetails" style="margin-top: 14px;"></div>
+      <div class="warning-banner" style="margin-top: 14px;">
+        <span class="warning-banner-icon">⚠️</span>
+        <div>
+          <div class="warning-banner-title">JANGAN stop obat sendiri!</div>
+          <div class="warning-banner-text">Tunggu instruksi dari dokter. Menghentikan obat tanpa pengawasan bisa menyebabkan TB kebal obat.</div>
+        </div>
+      </div>
+      <button class="btn-danger btn-full" style="margin-bottom: 8px; margin-top: 8px;">📞 Hubungi Puskesmas Sekarang</button>
+      <button class="btn-secondary btn-full" style="margin-bottom: 8px;">📍 Lokasi IGD Terdekat</button>
+      <button class="btn-secondary btn-full" onclick="closeModal('modalSymptom'); resetSymptoms();">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Contact -->
+<div class="modal-overlay" id="modalContact">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👨‍👩‍👧 Tambah Anggota Keluarga</div>
+    <div class="modal-sub">Semua orang serumah perlu didata untuk pencegahan</div>
+    <div class="form-group">
+      <label class="form-label">Nama Lengkap</label>
+      <input class="form-input" id="newName" placeholder="Contoh: Ani Wulandari">
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="form-group">
+        <label class="form-label">Usia (tahun)</label>
+        <input class="form-input" type="number" id="newAge" placeholder="cth: 8">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hubungan</label>
+        <select class="form-select" id="newRelation">
+          <option>Suami/Istri</option><option>Anak</option><option>Orang Tua</option><option>Saudara</option><option>Lainnya</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-check">
+        <input type="checkbox" id="newSymptom">
+        <label for="newSymptom">Ada gejala (batuk &gt;2 minggu, demam, BB turun)</label>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top: 6px;">
+      <button class="btn-secondary" onclick="closeModal('modalContact')">Batal</button>
+      <button class="btn-primary" onclick="addContact()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Call -->
+<div class="modal-overlay" id="modalCall">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📞 Hubungi Bantuan</div>
+    <div class="modal-sub">Pilih kontak yang ingin dihubungi</div>
+    <a href="tel:082198765432" class="call-item">
+      <div class="call-icon">❤️</div>
+      <div class="call-body">
+        <div class="call-title">PMO: Siti Aminah</div>
+        <div class="call-sub">Pengawas Minum Obat (Istri)</div>
+      </div>
+      <div style="font-size: 20px;">📞</div>
+    </a>
+    <a href="tel:02142156780" class="call-item">
+      <div class="call-icon">🏥</div>
+      <div class="call-body">
+        <div class="call-title">Puskesmas Cempaka Putih</div>
+        <div class="call-sub">Faskes pengobatan TB</div>
+      </div>
+      <div style="font-size: 20px;">📞</div>
+    </a>
+    <a href="tel:119" class="call-item urgent">
+      <div class="call-icon">🚨</div>
+      <div class="call-body">
+        <div class="call-title">IGD Terdekat (119)</div>
+        <div class="call-sub">Untuk kondisi darurat</div>
+      </div>
+      <div style="font-size: 20px;">📞</div>
+    </a>
+    <button class="btn-secondary btn-full" style="margin-top: 10px;" onclick="closeModal('modalCall')">Tutup</button>
+  </div>
+</div>
+
+<!-- Modal Food -->
+<div class="modal-overlay" id="modalFood">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🍽️ Catat Makanan</div>
+    <div class="modal-sub">Tambahkan makanan yang sudah dikonsumsi hari ini</div>
+    <div class="form-group">
+      <label class="form-label">Waktu Makan</label>
+      <select class="form-select" id="foodTime">
+        <option>🌅 Sarapan</option>
+        <option>☀️ Makan Siang</option>
+        <option>🌙 Makan Malam</option>
+        <option>🍎 Cemilan</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Makanan</label>
+      <input class="form-input" id="foodName" placeholder="Contoh: Nasi + Ayam Goreng + Sayur Bayam">
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="form-group">
+        <label class="form-label">Kalori (kcal)</label>
+        <input class="form-input" type="number" id="foodKcal" placeholder="cth: 450">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Protein (g)</label>
+        <input class="form-input" type="number" id="foodProtein" placeholder="cth: 25">
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top: 6px;">
+      <button class="btn-secondary" onclick="closeModal('modalFood')">Batal</button>
+      <button class="btn-primary" onclick="addFood()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════ DATA ══════════
+const symptoms = [
+  { id: 'batuk', label: 'Batuk', icon: '🫁', red: false },
+  { id: 'demam', label: 'Demam', icon: '🌡️', red: false },
+  { id: 'keringat', label: 'Keringat malam', icon: '💧', red: false },
+  { id: 'bbturun', label: 'BB turun', icon: '⚖️', red: false },
+  { id: 'mualringan', label: 'Mual ringan', icon: '😷', red: false },
+  { id: 'urine', label: 'Urine merah', icon: '🟠', red: false, normal: 'Ini NORMAL dari Rifampisin, jangan panik!' },
+  { id: 'kuning', label: 'Mata/kulit kuning', icon: '👁️', red: true, warning: 'Tanda gangguan hati akibat OAT. Segera ke faskes untuk cek SGOT/SGPT!' },
+  { id: 'visus', label: 'Penglihatan kabur', icon: '👓', red: true, warning: 'Kemungkinan efek samping Etambutol. Segera konsultasi, bisa irreversible!' },
+  { id: 'ruam', label: 'Ruam kulit berat', icon: '🔴', red: true, warning: 'Reaksi alergi OAT. Bisa Stevens-Johnson. Segera ke IGD!' },
+  { id: 'kesemutan', label: 'Kesemutan tangan/kaki', icon: '🖐️', red: true, warning: 'Neuropati akibat INH. Konsultasi untuk tambahan Vitamin B6!' },
+  { id: 'mualberat', label: 'Mual/muntah berat', icon: '🤢', red: true, warning: 'Mungkin hepatotoksisitas. Cek fungsi hati segera!' }
+];
+
+const education = [
+  { week: 'Minggu 1', title: 'Apa itu TBC & Kenapa 6 Bulan?', duration: '3 menit', icon: '📖', unlocked: true, done: true },
+  { week: 'Minggu 2', title: 'Cara Minum OAT yang Benar', duration: '4 menit', icon: '💊', unlocked: true, done: true },
+  { week: 'Minggu 3', title: 'Efek Samping yang Normal', duration: '3 menit', icon: '✅', unlocked: true, done: true },
+  { week: 'Minggu 4', title: 'Urine Merah? Jangan Panik!', duration: '2 menit', icon: '🟠', unlocked: true, done: true },
+  { week: 'Bulan 2', title: 'Kenapa Harus Tes Dahak Ulang', duration: '5 menit', icon: '🧪', unlocked: true, done: true },
+  { week: 'Bulan 3', title: 'Mitos & Fakta TBC', duration: '4 menit', icon: '❓', unlocked: true, done: false, active: true },
+  { week: 'Bulan 4', title: 'Gizi untuk Pasien TB', duration: '5 menit', icon: '🥗', unlocked: true, done: false },
+  { week: 'Bulan 5', title: 'Siap-siap Sembuh Tuntas', duration: '3 menit', icon: '🎉', unlocked: false, done: false }
+];
+
+let contacts = [
+  { id: 1, name: 'Siti Aminah', age: 42, relation: 'Istri', screened: true, symptoms: false, needsTPT: false },
+  { id: 2, name: 'Ahmad Rizki', age: 4, relation: 'Anak', screened: false, symptoms: false, needsTPT: true },
+  { id: 3, name: 'Nenek Sari', age: 68, relation: 'Ibu', screened: false, symptoms: true, needsTPT: false }
+];
+
+let foods = [
+  { time: '🌅 Sarapan', name: 'Nasi + Telur Dadar + Sayur Sop', kcal: 420, protein: 18 },
+  { time: '☀️ Makan Siang', name: 'Nasi + Ayam Goreng + Tempe', kcal: 430, protein: 24 }
+];
+
+let selectedSymptoms = [];
+let streak = 47;
+let obatTaken = false;
+let breathActive = false;
+let breathInterval = null;
+
+// ══════════ NAVIGATION ══════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('tab-' + tab);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.tab === tab);
+  });
+  window.scrollTo(0, 0);
+}
+
+// ══════════ MODAL ══════════
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+  document.body.style.overflow = 'hidden';
+  if (id === 'modalSymptom') {
+    document.getElementById('symptomChecklist').style.display = 'block';
+    document.getElementById('symptomAlert').style.display = 'none';
+  }
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+});
+
+// ══════════ TOAST ══════════
+function showToast(type, title, msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  const icons = { info: '💡', success: '✅', warning: '⚠️', danger: '🚨' };
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[type] || '💡'}</div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-msg">${msg}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+    <div class="toast-progress"></div>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-14px)'; setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+// ══════════ OBAT ══════════
+function confirmObat() {
+  obatTaken = true;
+  streak++;
+  const btn = document.getElementById('obatBtn');
+  btn.classList.add('taken');
+  btn.innerHTML = '<div class="obat-icon">✅</div><div class="obat-label">SUDAH<br>MINUM</div>';
+  document.getElementById('obatSub').textContent = 'Hebat! Lanjut besok ya 🌿';
+  closeModal('modalObat');
+  showToast('success', 'Obat Tercatat!', `Streak bertambah jadi ${streak} hari. Mantap!`);
+}
+
+// ══════════ SYMPTOMS ══════════
+function renderSymptoms() {
+  const grid = document.getElementById('symptomGrid');
+  grid.innerHTML = symptoms.map(s => `
+    <button class="symptom-btn ${s.red ? 'danger-symptom' : ''}" data-id="${s.id}" onclick="toggleSymptom('${s.id}')">
+      <span class="s-icon">${s.icon}</span>
+      ${s.label}${s.red ? ' 🚩' : ''}
+    </button>
+  `).join('');
+}
+function toggleSymptom(id) {
+  const btn = document.querySelector(`[data-id="${id}"]`);
+  const s = symptoms.find(x => x.id === id);
+  if (selectedSymptoms.includes(id)) {
+    selectedSymptoms = selectedSymptoms.filter(x => x !== id);
+    btn.classList.remove('selected');
+  } else {
+    selectedSymptoms.push(id);
+    btn.classList.add('selected');
+    if (s.normal) showToast('info', 'Ini Normal', s.normal);
+  }
+}
+function submitSymptoms() {
+  if (selectedSymptoms.length === 0) {
+    showToast('success', 'Sehat!', 'Tidak ada keluhan dilaporkan hari ini');
+    closeModal('modalSymptom');
+    return;
+  }
+  const redFlags = selectedSymptoms.map(id => symptoms.find(s => s.id === id)).filter(s => s.red);
+  if (redFlags.length > 0) {
+    const details = redFlags.map(s => `
+      <div class="insight-card-premium danger" style="margin-bottom: 8px;">
+        <div class="icp-icon">${s.icon}</div>
+        <div>
+          <div class="icp-label danger">${s.label}</div>
+          <div class="icp-text">${s.warning}</div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('alertDetails').innerHTML = details;
+    document.getElementById('symptomChecklist').style.display = 'none';
+    document.getElementById('symptomAlert').style.display = 'block';
+    document.getElementById('smartStatus').className = 'smart-status danger';
+    document.getElementById('smartStatus').innerHTML = '<span class="ss-icon">🚨</span><span>Ada gejala yang perlu perhatian segera!</span>';
+  } else {
+    showToast('success', 'Laporan Dikirim', 'Gejala ringan tercatat. Tetap semangat minum obat!');
+    closeModal('modalSymptom');
+    resetSymptoms();
+  }
+}
+function resetSymptoms() {
+  selectedSymptoms = [];
+  document.querySelectorAll('.symptom-btn').forEach(b => b.classList.remove('selected'));
+}
+
+// ══════════ CALENDAR ══════════
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  const taken = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,17,18,20,21,22,23];
+  const missed = [15,19];
+  const today = 24;
+  let html = '';
+  for (let p = 0; p < 3; p++) html += '<div></div>';
+  for (let d = 1; d <= 30; d++) {
+    let cls = 'cal-day';
+    if (d === today) cls += ' today';
+    else if (taken.includes(d)) cls += ' taken';
+    else if (missed.includes(d)) cls += ' missed';
+    else if (d > today) cls += ' future';
+    html += `<div class="${cls}">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+// ══════════ CONTACTS ══════════
+function renderContacts() {
+  const list = document.getElementById('contactList');
+  list.innerHTML = contacts.map(c => `
+    <div class="contact-item">
+      <div class="contact-header">
+        <div class="contact-avatar">${c.name.charAt(0)}</div>
+        <div class="contact-info">
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-meta">${c.age} tahun • ${c.relation}</div>
+        </div>
+        <span class="contact-badge ${c.screened ? 'screened' : 'pending'}">${c.screened ? '✓ Sudah' : '⏳ Belum'}</span>
+      </div>
+      ${(c.needsTPT || c.symptoms) ? `
+        <div class="contact-flags">
+          ${c.needsTPT ? '<div class="contact-flag">🚩 Anak &lt;5 tahun — WAJIB TPT (INH 6 bulan)</div>' : ''}
+          ${c.symptoms ? '<div class="contact-flag">🚩 Ada gejala — Segera TCM & foto toraks</div>' : ''}
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+  document.getElementById('contactCount').textContent = contacts.length;
+}
+function addContact() {
+  const name = document.getElementById('newName').value.trim();
+  const age = parseInt(document.getElementById('newAge').value);
+  const rel = document.getElementById('newRelation').value;
+  const symp = document.getElementById('newSymptom').checked;
+  if (!name || !age) { showToast('warning', 'Data Belum Lengkap', 'Nama dan usia wajib diisi'); return; }
+  contacts.push({ id: contacts.length + 1, name, age, relation: rel, screened: false, symptoms: symp, needsTPT: age < 5 });
+  document.getElementById('newName').value = '';
+  document.getElementById('newAge').value = '';
+  document.getElementById('newSymptom').checked = false;
+  renderContacts();
+  closeModal('modalContact');
+  const msg = age < 5 ? 'Anak ini perlu TPT (Terapi Pencegahan TB)' : 'Anggota keluarga berhasil ditambahkan';
+  showToast('success', 'Tersimpan', msg);
+}
+
+// ══════════ EDUCATION ══════════
+function renderEducation() {
+  // Coming soon — dikosongkan
+}
+
+// ══════════ DIAGNOSIS & SETTINGS ══════════
+function selectDiagnosis(type) {
+  document.querySelectorAll('.diagnosis-card').forEach(c => {
+    c.classList.remove('selected', 'selected-danger');
+  });
+  const card = document.querySelector('[data-diagnosis="' + type + '"]');
+  if (!card) return;
+  if (type === 'sensitif') {
+    card.classList.add('selected');
+    showToast('success', 'TB Sensitif Obat', 'Durasi pengobatan: 6 bulan');
+  } else {
+    card.classList.add('selected-danger');
+    showToast('warning', 'TB Resisten Obat', 'Durasi: 9-18 bulan. Konsultasi rutin sangat penting.');
+  }
+  updateEndDate();
+}
+
+function updateEndDate() {
+  const startInput = document.getElementById('settingStartDate');
+  const endInput   = document.getElementById('settingEndDate');
+  const regimenSel = document.getElementById('settingRegimen');
+  if (!startInput || !endInput || !regimenSel) return;
+  const start = new Date(startInput.value);
+  if (isNaN(start)) return;
+  const durationMap = {
+    '2rhze_4rh': 180, '2rhz_4rh_anak': 180,
+    '2rhze_1rhze_5rhe': 240,
+    'mdr_short': 300, 'mdr_long': 540, 'xdr': 720
+  };
+  const days = durationMap[regimenSel.value] || 180;
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+  endInput.value = end.toISOString().split('T')[0];
+  const infoEl = document.getElementById('regimenInfoBox');
+  if (!infoEl) return;
+  const desc = {
+    '2rhze_4rh':       '2 bulan RHZE (Rifampisin + INH + Pirazinamid + Etambutol) → 4 bulan RH',
+    '2rhz_4rh_anak':   '2 bulan RHZ → 4 bulan RH. Dosis berdasarkan berat badan anak (KDT).',
+    '2rhze_1rhze_5rhe':'2 bulan RHZE → 1 bulan RHZE → 5 bulan RHE — Kategori 2 (Relaps)',
+    'mdr_short':       'Regimen jangka pendek MDR-TB (9-11 bulan). Mengandung Bedaquiline.',
+    'mdr_long':        'Regimen jangka panjang MDR-TB 18-24 bulan. Injeksi + obat oral.',
+    'xdr':             'Regimen TB Pre-XDR/XDR. Wajib rujukan ke RS spesialis TB.'
+  };
+  const isRO = ['mdr_short','mdr_long','xdr'].includes(regimenSel.value);
+  infoEl.className = 'regimen-info show' + (isRO ? ' warn' : '');
+  infoEl.textContent = desc[regimenSel.value] || '';
+}
+
+function calcTreatmentDay(startDateStr) {
+  const start = new Date(startDateStr);
+  const today = new Date();
+  const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(1, diff);
+}
+
+function savePatientData() {
+  const name      = document.getElementById('settingName') && document.getElementById('settingName').value.trim();
+  const startDate = document.getElementById('settingStartDate') && document.getElementById('settingStartDate').value;
+  const regimen   = document.getElementById('settingRegimen') && document.getElementById('settingRegimen').value;
+  if (!name) { showToast('warning', 'Nama Wajib Diisi', 'Masukkan nama pasien'); return; }
+  if (!startDate) { showToast('warning', 'Tanggal Wajib Diisi', 'Masukkan tanggal mulai obat'); return; }
+  const durationMap = { '2rhze_4rh':180,'2rhz_4rh_anak':180,'2rhze_1rhze_5rhe':240,'mdr_short':300,'mdr_long':540,'xdr':720 };
+  const totalDays  = durationMap[regimen] || 180;
+  const currentDay = calcTreatmentDay(startDate);
+  // Update header badge
+  const dayEl = document.querySelector('.header-badge');
+  if (dayEl) dayEl.textContent = 'Hari ' + Math.min(currentDay, totalDays) + '/' + totalDays;
+  // Update header stats
+  const statEls = document.querySelectorAll('.hstat-val');
+  if (statEls[2]) statEls[2].textContent = Math.max(0, totalDays - currentDay);
+  // Update progress bar
+  const pct = Math.min(100, Math.round((currentDay / totalDays) * 100));
+  const fillEls = document.querySelectorAll('.progress-fill');
+  fillEls.forEach(el => { el.style.width = pct + '%'; });
+  // Update progress label
+  const progLabels = document.querySelectorAll('.progress-label');
+  progLabels.forEach(el => {
+    const spans = el.querySelectorAll('span');
+    if (spans[0]) spans[0].textContent = pct + '% \u2022 Hari ke-' + currentDay;
+  });
+  // Persist
+  try {
+    localStorage.setItem('teman_tb_data', JSON.stringify({
+      name, startDate, regimen, totalDays,
+      faskes: document.getElementById('settingFaskes') && document.getElementById('settingFaskes').value,
+      pmo:    document.getElementById('settingPMO')    && document.getElementById('settingPMO').value,
+    }));
+  } catch(e) {}
+  showToast('success', 'Data Disimpan!', 'Data ' + name + ' berhasil disimpan. Semangat sembuh tuntas! \uD83C\uDF3F');
+  setTimeout(function() { switchTab('beranda'); }, 1200);
+}
+
+function loadSavedData() {
+  try {
+    const raw = localStorage.getItem('teman_tb_data');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.name)      { const el = document.getElementById('settingName');      if (el) el.value = d.name; }
+    if (d.startDate) { const el = document.getElementById('settingStartDate'); if (el) el.value = d.startDate; }
+    if (d.regimen)   { const el = document.getElementById('settingRegimen');   if (el) el.value = d.regimen; }
+    if (d.faskes)    { const el = document.getElementById('settingFaskes');    if (el) el.value = d.faskes; }
+    if (d.pmo)       { const el = document.getElementById('settingPMO');       if (el) el.value = d.pmo; }
+    if (d.startDate) updateEndDate();
+    // Update header
+    const durationMap = { '2rhze_4rh':180,'2rhz_4rh_anak':180,'2rhze_1rhze_5rhe':240,'mdr_short':300,'mdr_long':540,'xdr':720 };
+    const totalDays  = durationMap[d.regimen] || 180;
+    const currentDay = calcTreatmentDay(d.startDate);
+    const dayEl = document.querySelector('.header-badge');
+    if (dayEl) dayEl.textContent = 'Hari ' + Math.min(currentDay, totalDays) + '/' + totalDays;
+    const statEls = document.querySelectorAll('.hstat-val');
+    if (statEls[2]) statEls[2].textContent = Math.max(0, totalDays - currentDay);
+    const pct = Math.min(100, Math.round((currentDay / totalDays) * 100));
+    const fillEls = document.querySelectorAll('.progress-fill');
+    fillEls.forEach(el => { el.style.width = pct + '%'; });
+  } catch(e) {}
+}
+
+// ══════════ MOOD ══════════
+function selectMood(btn, mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function saveMood() {
+  const note = document.getElementById('moodNote').value;
+  showToast('success', 'Mood Tersimpan', note ? 'Catatan hari ini disimpan' : 'Mood hari ini disimpan');
+  document.getElementById('moodNote').value = '';
+}
+
+// ══════════ FOOD ══════════
+function renderFoods() {
+  const list = document.getElementById('foodList');
+  if (!list) return;
+  list.innerHTML = foods.map((f, i) => `
+    <div class="food-item">
+      <div class="food-emoji">${f.time.charAt(0) || '🍽️'}</div>
+      <div class="food-info">
+        <div class="food-name">${f.name}</div>
+        <div class="food-detail">${f.time} • ${f.kcal} kcal • ${f.protein}g protein</div>
+      </div>
+      <button class="food-remove" onclick="removeFood(${i})">×</button>
+    </div>
+  `).join('');
+  updateFoodTotals();
+}
+function addFood() {
+  const time = document.getElementById('foodTime').value;
+  const name = document.getElementById('foodName').value.trim();
+  const kcal = parseInt(document.getElementById('foodKcal').value) || 0;
+  const protein = parseInt(document.getElementById('foodProtein').value) || 0;
+  if (!name) { showToast('warning', 'Nama Belum Diisi', 'Tuliskan nama makanan'); return; }
+  foods.push({ time, name, kcal, protein });
+  document.getElementById('foodName').value = '';
+  document.getElementById('foodKcal').value = '';
+  document.getElementById('foodProtein').value = '';
+  renderFoods();
+  closeModal('modalFood');
+  showToast('success', 'Makanan Tercatat', `${kcal} kcal, ${protein}g protein ditambahkan`);
+}
+function removeFood(i) {
+  foods.splice(i, 1);
+  renderFoods();
+}
+function updateFoodTotals() {
+  const totalKcal = foods.reduce((s, f) => s + f.kcal, 0);
+  const totalProtein = foods.reduce((s, f) => s + f.protein, 0);
+  const kEl = document.getElementById('totalKcal');
+  const pEl = document.getElementById('totalProtein');
+  if (kEl) kEl.textContent = totalKcal;
+  if (pEl) pEl.textContent = totalProtein;
+}
+
+// ══════════ BREATHING ══════════
+function toggleBreathing() {
+  const circle = document.getElementById('breathCircle');
+  const btn = document.getElementById('breathBtn');
+  if (!breathActive) {
+    breathActive = true;
+    btn.textContent = '⏸ Hentikan';
+    let phase = 0; // 0 = inhale, 1 = hold, 2 = exhale
+    const phases = [
+      { label: 'Tarik Napas... 4 detik', duration: 4000, inhale: true },
+      { label: 'Tahan... 7 detik', duration: 7000, inhale: true },
+      { label: 'Hembuskan... 8 detik', duration: 8000, inhale: false }
+    ];
+    function runPhase() {
+      if (!breathActive) return;
+      const p = phases[phase];
+      circle.textContent = p.label;
+      circle.classList.toggle('inhale', p.inhale);
+      breathInterval = setTimeout(() => {
+        phase = (phase + 1) % phases.length;
+        runPhase();
+      }, p.duration);
+    }
+    runPhase();
+  } else {
+    breathActive = false;
+    clearTimeout(breathInterval);
+    circle.textContent = 'Tarik Napas';
+    circle.classList.remove('inhale');
+    btn.textContent = '▶ Mulai Latihan';
+  }
+}
+
+// ══════════ INIT ══════════
+function init() {
+  renderSymptoms();
+  renderCalendar();
+  renderContacts();
+  renderEducation();
+  renderFoods();
+  loadSavedData();
+  setTimeout(() => {
+    const savedData = (() => { try { return JSON.parse(localStorage.getItem('teman_tb_data')); } catch(e) { return null; } })();
+    const firstName = savedData && savedData.name ? savedData.name.split(' ')[0] : 'Sobat';
+    showToast('info', 'Selamat pagi, ' + firstName + '!', 'Jangan lupa minum obat pagi ini ya 💊');
+  }, 600);
+}
+
+init();
+</script>
+
+</body>
+</html>
